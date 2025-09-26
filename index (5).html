@@ -1,0 +1,4000 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SYL-Bank</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #111827; /* Dark Blue-Gray */
+            color: #f3f4f6;
+        }
+        .container {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background-color: transparent; /* Container is transparent */
+        }
+        .card {
+            background-color: #1f2937; /* Darker card background */
+            padding: 2rem;
+            border-radius: 1.5rem;
+            border: 1px solid #374151; /* Darker border */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.25);
+        }
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #4b5563;
+            border-radius: 0.5rem;
+            margin-top: 0.5rem;
+            background-color: #374151;
+            color: #f3f4f6;
+        }
+        .form-input::placeholder {
+            color: #9ca3af;
+        }
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            transition: all 0.2s ease-in-out;
+        }
+        .btn-primary {
+            background-color: #34d399; /* Green */
+            color: #111827;
+        }
+        .btn-primary:hover {
+            background-color: #6ee7b7; /* Lighter Green */
+        }
+        .btn-secondary {
+            background-color: #374151; /* Dark Gray */
+            color: #f3f4f6; /* Light Gray */
+        }
+        .btn-secondary:hover {
+            background-color: #4b5563; /* Darker Gray */
+        }
+        .btn-danger {
+            background-color: #ef4444; /* Red */
+            color: white;
+        }
+        .btn-danger:hover {
+            background-color: #dc2626; /* Darker Red */
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.7);
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background-color: #1f2937;
+            padding: 2rem;
+            border-radius: 1rem;
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        textarea.form-input {
+            height: 150px;
+        }
+        .transaction-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #374151;
+        }
+        .transaction-item:last-child {
+            border-bottom: none;
+        }
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.2);
+            border-left-color: #34d399; /* Green */
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background-color: #374151;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 1rem;
+        }
+        .progress-fill {
+            height: 100%;
+            background-color: #34d399; /* Green */
+            transition: width 0.3s ease-in-out;
+        }
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid #374151;
+            user-select: none;
+        }
+        .tab {
+            cursor: pointer;
+            padding: 0.5rem 1rem;
+            font-weight: 600;
+            color: #9ca3af;
+            border-bottom: 2px solid transparent;
+            transition: border-color 0.2s, color 0.2s, transform 0.2s;
+        }
+        .tab.active {
+            border-bottom-color: #34d399; /* Green */
+            color: #34d399; /* Green */
+            transform: translateY(-2px);
+        }
+        .tab:hover {
+            transform: translateY(-2px);
+            color: #d1d5db;
+        }
+        /* Admin section tabs */
+        #admin-section-tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid #374151;
+            user-select: none;
+            justify-content: center;
+        }
+        #admin-section-tabs .tab {
+            cursor: pointer;
+            padding: 0.5rem 1rem;
+            font-weight: 600;
+            color: #9ca3af;
+            border-bottom: 2px solid transparent;
+            transition: border-color 0.2s, color 0.2s, transform 0.2s;
+        }
+        #admin-section-tabs .tab.active {
+            border-bottom-color: #34d399; /* Green */
+            color: #34d399; /* Green */
+            transform: translateY(-2px);
+        }
+        #admin-section-tabs .tab:hover {
+            transform: translateY(-2px);
+            color: #d1d5db;
+        }
+        .scrollable-table-container {
+            max-height: 350px;
+            overflow-y: auto;
+        }
+        .credit-score-graph {
+            display: flex;
+            height: 50px;
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+        .credit-score-graph > div {
+            height: 100%;
+        }
+        .credit-score-arrow {
+            width: 0;
+            height: 0;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-top: 20px solid #f3f4f6;
+            margin: 0 auto;
+            transition: margin-left 0.3s ease-in-out;
+        }
+        #notification-popup-container {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 1050;
+        }
+        .notification-popup {
+            background-color: #1f2937;
+            color: #f3f4f6;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 1rem;
+            opacity: 0;
+            transform: translateX(100%);
+            animation: slideIn 0.5s forwards, fadeOut 0.5s 9.5s forwards;
+        }
+        @keyframes slideIn {
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+            }
+            to {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center bg-gray-900">
+
+<div id="notification-popup-container"></div>
+
+<!-- Loading Screen with Progress Bar -->
+<div id="loading-screen" class="fixed inset-0 flex flex-col items-center justify-center bg-gray-900 z-50">
+    <div class="spinner"></div>
+    <p class="mt-4 text-gray-400 font-medium">Initializing Sylvaria Bank...</p>
+    <div class="progress-bar w-1/2">
+        <div id="progress-fill" class="progress-fill" style="width: 0%;"></div>
+    </div>
+</div>
+
+<div class="container" id="app-container" style="display: none;">
+    <!-- Login View -->
+    <div id="login-view" class="space-y-6">
+        <h1 class="text-4xl font-bold text-center mb-6 text-white">Welcome to <span class="text-green-400">Sylvaria Bank</span></h1>
+        <div id="user-login-form" class="card">
+            <h2 class="text-2xl font-semibold mb-4 text-white">User Login</h2>
+            <form class="space-y-4">
+                <div>
+                    <label for="sydid" class="block font-medium text-gray-300">SYDID (9 Digits)</label>
+                    <input type="text" id="sydid" class="form-input" placeholder="Your SYDID" maxlength="9" required />
+                </div>
+                <div>
+                    <label for="password" class="block font-medium text-gray-300">Password (6 Digits)</label>
+                    <input type="password" id="password" class="form-input" placeholder="Your Password" maxlength="6" required />
+                </div>
+                <div>
+                    <label for="keyword" class="block font-medium text-gray-300">Keyword (4 Digits)</label>
+                    <input type="text" id="keyword" class="form-input" placeholder="Your Keyword" maxlength="4" required />
+                </div>
+                <button type="submit" id="user-login-btn" class="btn btn-primary w-full">Log In</button>
+                <p id="user-login-error" class="text-red-400 text-sm text-center mt-2 hidden">Invalid credentials.</p>
+            </form>
+        </div>
+        <div id="business-login-form" class="card hidden">
+            <h2 class="text-2xl font-semibold mb-4 text-white">Business Login</h2>
+            <form class="space-y-4">
+                <div>
+                    <label for="sybid" class="block font-medium text-gray-300">SYBID (9 Digits)</label>
+                    <input type="text" id="sybid" class="form-input" placeholder="Your SYBID" maxlength="9" required />
+                </div>
+                <div>
+                    <label for="business-password" class="block font-medium text-gray-300">Password (8 Digits)</label>
+                    <input type="password" id="business-password" class="form-input" placeholder="Your Password" maxlength="8" required />
+                </div>
+                <div>
+                    <label for="business-keyword" class="block font-medium text-gray-300">Keyword (4 Digits)</label>
+                    <input type="text" id="business-keyword" class="form-input" placeholder="Your Keyword" maxlength="4" required />
+                </div>
+                <button type="submit" id="business-login-btn" class="btn btn-primary w-full">Log In</button>
+                <p id="business-login-error" class="text-red-400 text-sm text-center mt-2 hidden">Invalid credentials.</p>
+            </form>
+        </div>
+        <div id="staff-login-form" class="card hidden">
+            <h2 class="text-2xl font-semibold mb-4 text-white">Staff Login</h2>
+            <form class="space-y-4">
+                <div>
+                    <label for="staff-username-login" class="block font-medium text-gray-300">Username</label>
+                    <input type="text" id="staff-username-login" class="form-input" placeholder="Your Username" required />
+                </div>
+                <div>
+                    <label for="staff-password-login" class="block font-medium text-gray-300">Password</label>
+                    <input type="password" id="staff-password-login" class="form-input" placeholder="Your Password" required />
+                </div>
+                <button type="submit" id="staff-login-btn" class="btn btn-primary w-full">Log In</button>
+                <p id="staff-login-error" class="text-red-400 text-sm text-center mt-2 hidden">Invalid credentials.</p>
+            </form>
+        </div>
+        <div class="text-center space-x-2">
+            <button id="create-account-request-btn" class="btn btn-primary">Create Account</button>
+            <button id="user-mode-btn" class="btn btn-secondary hidden">User Mode</button>
+            <button id="business-mode-btn" class="btn btn-secondary">Business Mode</button>
+            <button id="staff-mode-btn" class="btn btn-secondary">Staff Mode</button>
+            <button id="admin-mode-btn" class="btn btn-secondary">Admin Mode</button>
+            <a href="customer_view.html" class="btn btn-secondary" target="_blank">Customer View</a>
+        </div>
+
+        <div id="admin-login-form" class="card hidden">
+            <h2 class="text-2xl font-semibold mb-4 text-white">Admin Login</h2>
+            <form class="space-y-4" id="admin-login-fields">
+                <div>
+                    <label for="admin-username" class="block font-medium text-gray-300">Username</label>
+                    <input type="text" id="admin-username" class="form-input" required />
+                </div>
+                <div>
+                    <label for="admin-password" class="block font-medium text-gray-300">Password</label>
+                    <input type="password" id="admin-password" class="form-input" required />
+                </div>
+                <div>
+                    <label for="admin-passkey" class="block font-medium text-gray-300">Passkey</label>
+                    <input type="password" id="admin-passkey" class="form-input" required />
+                </div>
+                <div>
+                    <label for="admin-govpasskey" class="block font-medium text-gray-300">Govpasskey</label>
+                    <input type="password" id="admin-govpasskey" class="form-input" required />
+                </div>
+                <div>
+                    <label for="secure-gov-code" class="block font-medium text-gray-300">SecureGOVnumber</label>
+                    <button type="button" id="send-code-btn" class="btn btn-secondary w-full my-2">Send Code</button>
+                    <input type="text" id="secure-gov-code" class="form-input" placeholder="Enter 8-digit code" required />
+                </div>
+            </form>
+            <div class="flex items-center my-4">
+                <input type="checkbox" id="admin-stay-signed-in" class="form-checkbox" />
+                <label for="admin-stay-signed-in" class="ml-2 text-gray-300">Stay signed in</label>
+            </div>
+            <p id="admin-login-error" class="text-red-400 text-sm text-center mt-2 hidden">Invalid admin credentials.</p>
+            <button type="submit" id="admin-login-btn" class="btn btn-primary w-full mt-4">Log In as Admin</button>
+        </div>
+    </div>
+
+    <!-- User Dashboard View -->
+    <div id="user-dashboard-view" class="hidden space-y-6">
+        <div class="flex justify-between items-center">
+            <div class="tabs" id="user-tabs">
+                <div class="tab active" data-tab="dashboard-tab">Dashboard</div>
+                <div class="tab" data-tab="cards-loans-tab">Cards & Loans</div>
+                <div class="tab" data-tab="credit-score-tab">Credit Score</div>
+                <div class="tab" data-tab="savings-tab">Savings</div>
+                <div class="tab" data-tab="donate-tab">Donate</div>
+                <div class="tab" data-tab="notifications-tab">Notifications</div>
+                <div class="tab" data-tab="goals-tab">Goals</div>
+            </div>
+            <button id="logout-btn" class="btn btn-secondary">Logout</button>
+        </div>
+
+        <div id="dashboard-tab" class="space-y-6">
+            <div class="card flex items-center justify-between">
+                <h1 id="user-display-name" class="text-2xl font-bold text-white"></h1>
+                <p class="text-gray-300"><strong>Gift Number:</strong> <span id="user-gift-number"></span></p>
+            </div>
+
+            <div class="card">
+                <h2 class="text-2xl font-semibold text-white">Your Balance:</h2>
+                <p id="user-balance" class="text-4xl font-extrabold mt-2 text-green-400">0 SYL</p>
+            </div>
+
+            <div class="card space-y-4">
+                <h2 class="text-2xl font-semibold text-white">Send a Gift</h2>
+                <div>
+                    <label for="gift-recipient-id" class="block font-medium text-gray-300">Recipient's Gift Number</label>
+                    <input type="text" id="gift-recipient-id" class="form-input" placeholder="Recipient's Gift Number" required />
+                </div>
+                <div>
+                    <label for="gift-amount" class="block font-medium text-gray-300">Amount to Gift</label>
+                    <input type="number" id="gift-amount" class="form-input" placeholder="0.00" required />
+                </div>
+                <div>
+                    <label for="gift-title" class="block font-medium text-gray-300">Title</label>
+                    <input type="text" id="gift-title" class="form-input" placeholder="Happy Birthday!" />
+                </div>
+                <div>
+                    <label for="gift-message" class="block font-medium text-gray-300">Message</label>
+                    <textarea id="gift-message" class="form-input" placeholder="A little something for you."></textarea>
+                </div>
+                <button id="send-gift-btn" class="btn btn-primary">Send Gift</button>
+            </div>
+
+            <div class="card space-y-4">
+                <h2 class="text-2xl font-semibold text-white">Transaction History</h2>
+                <div id="transaction-list" class="space-y-2 text-sm">
+                    <!-- Transactions will be injected here -->
+                </div>
+            </div>
+
+            <div class="card space-y-4">
+                <h2 class="text-2xl font-semibold text-white">Change Credentials</h2>
+                <div>
+                    <label for="old-password" class="block font-medium text-gray-300">Old Password</label>
+                    <input type="password" id="old-password" class="form-input" maxlength="6" required />
+                </div>
+                <div>
+                    <label for="new-password-input" class="block font-medium text-gray-300">New Password</label>
+                    <input type="password" id="new-password-input" class="form-input" maxlength="6" required />
+                </div>
+                <div>
+                    <label for="new-keyword-input" class="block font-medium text-gray-300">New Keyword</label>
+                    <input type="text" id="new-keyword-input" class="form-input" maxlength="4" required />
+                </div>
+                <button id="update-credentials-btn" class="btn btn-primary">Update Credentials</button>
+            </div>
+        </div>
+
+        <div id="cards-loans-tab" class="hidden space-y-6">
+            <div class="card space-y-4">
+                <h2 class="text-2xl font-semibold text-white">Your Credit Card</h2>
+                <div id="user-card-info">
+                    <!-- Card info will be rendered here -->
+                </div>
+                <div class="card space-y-4 mt-4">
+                    <h3 class="text-xl font-semibold text-white">Pay Credit Card Debt</h3>
+                    <div>
+                        <label for="pay-debt-amount" class="block font-medium text-gray-300">Amount to Pay</label>
+                        <input type="number" id="pay-debt-amount" class="form-input" placeholder="0.00" min="0" step="0.01" />
+                    </div>
+                    <button id="pay-debt-btn" class="btn btn-primary">Pay Debt</button>
+                    <p id="pay-debt-error" class="text-red-400 text-sm hidden mt-2"></p>
+                </div>
+            </div>
+            <div class="card space-y-4 mt-4">
+                <h2 class="text-2xl font-semibold text-white">Your Debit Card</h2>
+                <div id="user-debit-card-info">
+                    <!-- Debit card info will be rendered here -->
+                </div>
+            </div>
+            <div class="card space-y-4 mt-4">
+                <h2 class="text-2xl font-semibold text-white">Request a Loan</h2>
+                <div>
+                    <label for="loan-amount" class="block font-medium text-gray-300">Amount</label>
+                    <input type="number" id="loan-amount" class="form-input" placeholder="0.00" required />
+                </div>
+                <div>
+                    <label for="loan-reason" class="block font-medium text-gray-300">Reason</label>
+                    <textarea id="loan-reason" class="form-input" placeholder="Why do you need this loan?"></textarea>
+                </div>
+                <button id="request-loan-btn" class="btn btn-primary">Request Loan</button>
+            </div>
+            <div class="card space-y-4 mt-4">
+                <h2 class="text-2xl font-semibold text-white">Your Loans</h2>
+                <div id="loan-list">
+                    <!-- Loan status will be injected here -->
+                </div>
+            </div>
+        </div>
+
+        <div id="credit-score-tab" class="hidden">
+            <div class="card">
+                <h2 class="text-2xl font-semibold text-white">Your Credit Score</h2>
+                <div id="credit-score-container" class="mt-4">
+                    <!-- Credit score will be rendered here -->
+                </div>
+            </div>
+        </div>
+
+        <div id="savings-tab" class="hidden">
+            <div class="card">
+                <h2 class="text-2xl font-semibold text-white">Savings Vaults</h2>
+                <div id="savings-vaults-container" class="mt-4">
+                    <!-- Savings vaults will be rendered here -->
+                </div>
+                <div class="mt-4">
+                    <input type="text" id="new-vault-title" class="form-input" placeholder="New Vault Title" />
+                    <button id="create-vault-btn" class="btn btn-primary mt-2">Create Vault</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="donate-tab" class="hidden">
+            <div class="card">
+                <h2 class="text-2xl font-semibold text-white">Donate to the Government</h2>
+                <div class="mt-4">
+                    <label for="donation-amount" class="block font-medium text-gray-300">Amount</label>
+                    <input type="number" id="donation-amount" class="form-input" placeholder="0.00" />
+                </div>
+                <div class="mt-4">
+                    <label for="donation-reason" class="block font-medium text-gray-300">Reason</label>
+                    <input type="text" id="donation-reason" class="form-input" placeholder="Reason for donation" />
+                </div>
+                <button id="donate-btn" class="btn btn-primary mt-4">Donate</button>
+            </div>
+        </div>
+
+        <div id="notifications-tab" class="hidden">
+            <div class="card">
+                <h2 class="text-2xl font-semibold text-white">Notification Settings</h2>
+                <div class="mt-4 space-y-2 text-gray-300">
+                    <label class="flex items-center">
+                        <input type="checkbox" id="low-balance-notification" class="form-checkbox" />
+                        <span class="ml-2">Low Balance Alerts</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" id="high-debt-notification" class="form-checkbox" />
+                        <span class="ml-2">High Debt Alerts</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" id="large-transaction-notification" class="form-checkbox" />
+                        <span class="ml-2">Large Transaction Alerts</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" id="payment-reminder-notification" class="form-checkbox" />
+                        <span class="ml-2">Payment Reminders</span>
+                    </label>
+                </div>
+            </div>
+            <div class="card mt-6">
+                <h2 class="text-2xl font-semibold text-white">Notification History</h2>
+                <div id="notification-history" class="mt-4 space-y-2">
+                    <!-- Notification history will be rendered here -->
+                </div>
+            </div>
+        </div>
+
+        <div id="goals-tab" class="hidden">
+            <div class="card">
+                <h2 class="text-2xl font-semibold text-white">Monthly Spending Goal</h2>
+                <div class="mt-4">
+                    <label for="monthly-goal" class="block font-medium text-gray-300">Set Goal</label>
+                    <input type="number" id="monthly-goal" class="form-input" placeholder="0.00" />
+                    <button id="set-goal-btn" class="btn btn-primary mt-2">Set Goal</button>
+                </div>
+                <div id="goal-progress-container" class="mt-6">
+                    <!-- Goal progress will be rendered here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Business Dashboard View -->
+    <div id="business-dashboard-view" class="hidden space-y-6">
+        <div class="flex justify-between items-center">
+            <h1 id="business-display-name" class="text-2xl font-bold text-white"></h1>
+            <p class="text-gray-300"><strong>Gift Number:</strong> <span id="business-gift-number"></span></p>
+            <button id="business-logout-btn" class="btn btn-secondary">Logout</button>
+        </div>
+
+        <div class="tabs" id="business-tabs">
+            <div class="tab active" data-tab="business-dashboard-tab">Dashboard</div>
+            <div class="tab" data-tab="inventory-tab">Inventory</div>
+            <div class="tab" data-tab="staff-tab">Staff</div>
+        </div>
+
+        <div id="business-dashboard-tab" class="space-y-6">
+            <div class="card">
+                <h2 class="text-2xl font-semibold text-white">Total Money:</h2>
+                <p id="business-balance" class="text-4xl font-extrabold mt-2 text-green-400">0 SYL</p>
+            </div>
+
+            <div class="card space-y-4 mt-4">
+                <h2 class="text-2xl font-semibold text-white">Gift Funds</h2>
+                <div>
+                    <label for="business-gift-sydid" class="block font-medium text-gray-300">Recipient's Gift Number</label>
+                    <input type="text" id="business-gift-sydid" class="form-input" placeholder="Recipient's Gift Number" required />
+                </div>
+                <div>
+                    <label for="business-gift-amount" class="block font-medium text-gray-300">Amount to Gift</label>
+                    <input type="number" id="business-gift-amount" class="form-input" placeholder="0.00" required />
+                </div>
+                <button id="business-gift-btn" class="btn btn-primary">Gift</button>
+                <p id="business-gift-error" class="text-red-400 text-sm hidden mt-2"></p>
+            </div>
+
+            <div class="card space-y-4 mt-4">
+                <h2 class="text-2xl font-semibold text-white">Pay User</h2>
+                <div>
+                    <label for="pay-user-sydid" class="block font-medium text-gray-300">User's SYDID</label>
+                    <input type="text" id="pay-user-sydid" class="form-input" placeholder="User's SYDID" required />
+                </div>
+                <div>
+                    <label for="pay-user-amount" class="block font-medium text-gray-300">Amount to Pay</label>
+                    <input type="number" id="pay-user-amount" class="form-input" placeholder="0.00" required />
+                </div>
+                <button id="pay-user-btn" class="btn btn-primary">Pay</button>
+                <p id="pay-user-error" class="text-red-400 text-sm hidden mt-2"></p>
+            </div>
+
+            <div class="card space-y-4 mt-4">
+                <h2 class="text-2xl font-semibold text-white">Charge User</h2>
+                <div>
+                    <label for="charge-card-number" class="block font-medium text-gray-300">Credit/Debit Card Number</label>
+                    <input type="text" id="charge-card-number" class="form-input" placeholder="User's Card Number" maxlength="16" required />
+                </div>
+                <div id="credit-score-display" class="hidden mt-2">
+                    <p class="text-gray-300"><strong>Credit Score:</strong> <span id="charge-credit-score"></span></p>
+                </div>
+                <div>
+                    <label for="charge-confirmation-number" class="block font-medium text-gray-300">Confirmation #</label>
+                    <input type="text" id="charge-confirmation-number" class="form-input" placeholder="Confirmation Number" maxlength="4" required />
+                </div>
+                <div>
+                    <label for="charge-security-code" class="block font-medium text-gray-300">5-Digit Security Code (for Debit)</label>
+                    <input type="text" id="charge-security-code" class="form-input" placeholder="5-Digit Code" maxlength="5" />
+                </div>
+                <div>
+                    <label for="inventory-item-select" class="block font-medium text-gray-300">Select from Inventory</label>
+                    <select id="inventory-item-select" class="form-input"></select>
+                </div>
+                <div>
+                    <label for="charge-product-name" class="block font-medium text-gray-300">Product Name</label>
+                    <input type="text" id="charge-product-name" class="form-input" placeholder="Name of the product" required />
+                </div>
+                <div>
+                    <label for="charge-amount" class="block font-medium text-gray-300">Amount</label>
+                    <input type="number" id="charge-amount" class="form-input" placeholder="0.00" required />
+                </div>
+                <button id="charge-btn" class="btn btn-primary">Charge</button>
+                <p id="charge-error" class="text-red-400 text-sm hidden mt-2"></p>
+            </div>
+        </div>
+
+        <div id="inventory-tab" class="hidden">
+            <div class="card">
+                <h2 class="text-2xl font-semibold text-white">Manage Inventory</h2>
+                <div class="mt-4">
+                    <label for="item-name" class="block font-medium text-gray-300">Item Name</label>
+                    <input type="text" id="item-name" class="form-input" placeholder="e.g., Coffee" />
+                </div>
+                <div class="mt-2">
+                    <label for="item-price" class="block font-medium text-gray-300">Item Price</label>
+                    <input type="number" id="item-price" class="form-input" placeholder="0.00" />
+                </div>
+                <button id="add-item-btn" class="btn btn-primary mt-4">Add Item</button>
+            </div>
+            <div class="card mt-6">
+                <h2 class="text-2xl font-semibold text-white">Current Inventory</h2>
+                <div id="inventory-list" class="mt-4 space-y-2">
+                    <!-- Inventory items will be rendered here -->
+                </div>
+            </div>
+        </div>
+
+        <div id="staff-tab" class="hidden">
+            <div class="card">
+                <h2 class="text-2xl font-semibold text-white">Create Staff Account</h2>
+                <div class="mt-4">
+                    <label for="staff-name" class="block font-medium text-gray-300">Staff Name</label>
+                    <input type="text" id="staff-name" class="form-input" placeholder="Full Name" />
+                </div>
+                <div class="mt-2">
+                    <label for="staff-username" class="block font-medium text-gray-300">Username</label>
+                    <input type="text" id="staff-username" class="form-input" placeholder="Username" />
+                </div>
+                <div class="mt-2">
+                    <label for="staff-password" class="block font-medium text-gray-300">Password</label>
+                    <input type="password" id="staff-password" class="form-input" placeholder="Password" />
+                </div>
+                <button id="create-staff-btn" class="btn btn-primary mt-4">Create Staff</button>
+            </div>
+            <div class="card mt-6">
+                <h2 class="text-2xl font-semibold text-white">Staff List</h2>
+                <div id="staff-list" class="mt-4 space-y-2">
+                    <!-- Staff list will be rendered here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Staff Dashboard View -->
+    <div id="staff-dashboard-view" class="hidden space-y-6">
+        <div class="flex justify-between items-center">
+            <h1 id="staff-display-name" class="text-2xl font-bold text-white"></h1>
+            <button id="staff-logout-btn" class="btn btn-secondary">Logout</button>
+        </div>
+        <div class="card space-y-4">
+            <h2 class="text-2xl font-semibold text-white">Sell Item</h2>
+            <div>
+                <label for="staff-charge-card-number" class="block font-medium text-gray-300">Credit/Debit Card Number</label>
+                <input type="text" id="staff-charge-card-number" class="form-input" placeholder="User's Card Number" maxlength="16" required />
+            </div>
+            <div>
+                <label for="staff-charge-confirmation-number" class="block font-medium text-gray-300">Confirmation #</label>
+                <input type="text" id="staff-charge-confirmation-number" class="form-input" placeholder="Confirmation Number" maxlength="4" required />
+            </div>
+            <div>
+                <label for="staff-charge-security-code" class="block font-medium text-gray-300">5-Digit Security Code (for Debit)</label>
+                <input type="text" id="staff-charge-security-code" class="form-input" placeholder="5-Digit Code" maxlength="5" />
+            </div>
+            <div>
+                <label for="staff-inventory-item-select" class="block font-medium text-gray-300">Select from Inventory</label>
+                <select id="staff-inventory-item-select" class="form-input"></select>
+            </div>
+            <button id="staff-sell-btn" class="btn btn-primary">Sell</button>
+            <p id="staff-sell-error" class="text-red-400 text-sm hidden mt-2"></p>
+        </div>
+    </div>
+
+    <!-- Admin Dashboard View -->
+    <div id="admin-dashboard-view" class="hidden space-y-6">
+        <h1 class="text-3xl font-bold text-center mb-4 text-white">Admin Dashboard</h1>
+        <div class="flex justify-between items-center mb-4">
+            <span id="admin-display-name" class="text-2xl font-bold text-white">Logged in as: Admin</span>
+            <button id="admin-logout-btn" class="btn btn-secondary">Logout</button>
+        </div>
+
+        <div id="admin-section-tabs" class="mb-6">
+            <div class="tab active" data-admin-tab="user-management">User Management</div>
+            <div class="tab" data-admin-tab="business-management">Business Management</div>
+            <div class="tab" data-admin-tab="financial-management">Financial Management</div>
+            <div class="tab" data-admin-tab="news-management">News Management</div>
+            <div class="tab" data-admin-tab="logs-tab">Logs</div>
+            <div class="tab" data-admin-tab="import-export">Import / Export Data</div>
+        </div>
+
+        <div id="user-management" class="admin-tab-content">
+            <div class="card space-y-4 mb-6">
+                <h2 class="text-2xl font-semibold text-white">Create New User</h2>
+                <div>
+                    <label for="new-user-name" class="block font-medium text-gray-300">User Name</label>
+                    <input type="text" id="new-user-name" class="form-input" placeholder="Enter user's full name" />
+                </div>
+                <button id="create-user-btn" class="btn btn-primary">Create User</button>
+                <p id="create-user-status" class="text-sm hidden mt-2"></p>
+            </div>
+
+            <div class="card">
+                <h2 class="text-2xl font-semibold mb-4 text-white">All Users</h2>
+                <input type="text" id="user-search" class="form-input mb-4" placeholder="Search by name or SYDID..." />
+                <div class="overflow-x-auto scrollable-table-container">
+                    <table class="w-full text-left table-auto border-collapse">
+                        <thead>
+                        <tr class="bg-gray-800">
+                            <th class="p-4 border-b border-gray-700 text-gray-300">Name</th>
+                            <th class="p-4 border-b border-gray-700 text-gray-300">SYDID</th>
+                            <th class="p-4 border-b border-gray-700 text-gray-300">Gift Number</th>
+                            <th class="p-4 border-b border-gray-700 text-gray-300">Password</th>
+                            <th class="p-4 border-b border-gray-700 text-gray-300">Keyword</th>
+                            <th class="p-4 border-b border-gray-700 text-gray-300">Balance</th>
+                            <th class="p-4 border-b border-gray-700 text-gray-300">Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody id="user-list-table">
+                        <!-- User data will be injected here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card mt-6">
+                <h2 class="text-2xl font-semibold mb-4 text-white">User Account Requests</h2>
+                <div class="overflow-x-auto scrollable-table-container">
+                    <table class="w-full text-left table-auto border-collapse">
+                        <thead>
+                        <tr class="bg-gray-800">
+                            <th class="p-4 border-b border-gray-700 text-gray-300">Full Name</th>
+                            <th class="p-4 border-b border-gray-700 text-gray-300">Status</th>
+                            <th class="p-4 border-b border-gray-700 text-gray-300">Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody id="account-requests-table">
+                        <!-- Account requests will be injected here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="business-management" class="admin-tab-content hidden">
+            <div class="card space-y-4 mb-6">
+                <h2 class="text-2xl font-semibold text-white">Create New Business</h2>
+                <div>
+                    <label for="new-business-name" class="block font-medium text-gray-300">Business Name</label>
+                    <input type="text" id="new-business-name" class="form-input" placeholder="Enter business name" />
+                </div>
+                <button id="create-business-btn" class="btn btn-primary">Create Business</button>
+                <p id="create-business-status" class="text-sm hidden mt-2"></p>
+            </div>
+
+            <div class="card">
+                <h2 class="text-2xl font-semibold mb-4 text-white">All Businesses</h2>
+                <input type="text" id="business-search" class="form-input mb-4" placeholder="Search by name or SYBID..." />
+                <div class="overflow-x-auto scrollable-table-container">
+                    <table class="w-full text-left table-auto border-collapse">
+                        <thead>
+                        <tr class="bg-gray-800">
+                            <th class="p-4 border-b border-gray-700 text-gray-300">Name</th>
+                            <th class="p-4 border-b border-gray-700 text-gray-300">SYBID</th>
+                            <th class="p-4 border-b border-gray-700 text-gray-300">Gift Number</th>
+                            <th class="p-4 border-b border-gray-700 text-gray-300">Password</th>
+                            <th class="p-4 border-b border-gray-700 text-gray-300">Keyword</th>
+                            <th class="p-4 border-b border-gray-700 text-gray-300">Balance</th>
+                            <th class="p-4 border-b border-gray-700 text-gray-300">Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody id="business-list-table">
+                        <!-- Business data will be injected here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="financial-management" class="admin-tab-content hidden">
+            <div class="card space-y-4 mb-6">
+                <h2 class="text-2xl font-semibold text-white">Create Card for User</h2>
+                <div>
+                    <label for="card-user-sydid" class="block font-medium text-gray-300">User SYDID</label>
+                    <input type="text" id="card-user-sydid" class="form-input" placeholder="Enter user's SYDID" />
+                </div>
+                <div>
+                    <label for="card-type" class="block font-medium text-gray-300">Card Type</label>
+                    <select id="card-type" class="form-input">
+                        <option value="credit">Credit Card</option>
+                        <option value="debit">Debit Card</option>
+                    </select>
+                </div>
+                <button id="create-card-btn" class="btn btn-primary">Create Card</button>
+                <p id="create-card-status" class="text-sm hidden mt-2"></p>
+            </div>
+
+            <div class="card">
+                <h2 class="text-2xl font-semibold mb-4 text-white">Users with Cards</h2>
+                <input type="text" id="card-user-search" class="form-input mb-4" placeholder="Search users by name or SYDID..." />
+                <div class="overflow-x-auto scrollable-table-container">
+                    <table class="w-full text-left table-auto border-collapse">
+                        <thead>
+                        <tr class="bg-gray-800">
+                            <th class="p-4 border-b border-gray-700 text-gray-300">Name</th>
+                            <th class="p-4 border-b border-gray-700 text-gray-300">SYDID</th>
+                            <th class="p-4 border-b border-gray-700 text-gray-300">Card Number (masked)</th>
+                            <th class="p-4 border-b border-gray-700 text-gray-300">Card Type</th>
+                            <th class="p-4 border-b border-gray-700 text-gray-300">Debt</th>
+                            <th class="p-4 border-b border-gray-700 text-gray-300">Credit Score</th>
+                            <th class="p-4 border-b border-gray-700 text-gray-300">Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody id="card-user-list-table">
+                        <!-- Users with cards will be injected here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card mt-6">
+                <h2 class="text-2xl font-semibold mb-4 text-white">All Debts</h2>
+                <div class="overflow-x-auto scrollable-table-container">
+                    <table class="w-full text-left table-auto border-collapse">
+                        <thead>
+                        <tr class="bg-gray-800">
+                            <th class="p-4 border-b border-gray-700 text-gray-300">User/Business ID</th>
+                            <th class="p-4 border-b border-gray-700 text-gray-300">Debt Type</th>
+                            <th class="p-4 border-b border-gray-700 text-gray-300">Amount</th>
+                        </tr>
+                        </thead>
+                        <tbody id="all-debts-table">
+                        <!-- Debts will be injected here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card mt-6">
+                <h2 class="text-2xl font-semibold mb-4 text-white">Loan Applications</h2>
+                <div class="overflow-x-auto scrollable-table-container">
+                    <table class="w-full text-left table-auto border-collapse">
+                        <thead>
+                        <tr class="bg-gray-800">
+                            <th class="p-4 border-b border-gray-700 text-gray-300">Applicant ID</th>
+                            <th class="p-4 border-b border-gray-700 text-gray-300">Amount</th>
+                            <th class="p-4 border-b border-gray-700 text-gray-300">Reason</th>
+                            <th class="p-4 border-b border-gray-700 text-gray-300">Status</th>
+                            <th class="p-4 border-b border-gray-700 text-gray-300">Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody id="loan-applications-table">
+                        <!-- Loan applications will be injected here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card mt-6">
+                <h2 class="text-2xl font-semibold mb-4 text-white">Tax & Interest</h2>
+                <div>
+                    <label for="tax-amount" class="block font-medium text-gray-300">Tax Amount (%)</label>
+                    <input type="number" id="tax-amount" class="form-input" placeholder="e.g., 2.5" />
+                    <button id="collect-tax-btn" class="btn btn-danger mt-2">Collect Tax</button>
+                </div>
+                <div class="mt-4">
+                    <label for="interest-rate" class="block font-medium text-gray-300">Set Interest Rate (%)</label>
+                    <input type="number" id="interest-rate" class="form-input" placeholder="e.g., 1.5" />
+                    <button id="set-interest-rate-btn" class="btn btn-primary mt-2">Set Rate</button>
+                    <button id="pay-interest-btn" class="btn btn-primary mt-2">Pay Interest</button>
+                </div>
+                <div class="mt-4">
+                    <button id="send-reports-btn" class="btn btn-secondary">Send Monthly Reports</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="news-management" class="admin-tab-content hidden">
+            <div class="card space-y-4">
+                <h2 class="text-2xl font-semibold text-white">Post a News Article</h2>
+                <div>
+                    <label for="news-title" class="block font-medium text-gray-300">Title</label>
+                    <input type="text" id="news-title" class="form-input" placeholder="Article Title" />
+                </div>
+                <div>
+                    <label for="news-content" class="block font-medium text-gray-300">Content</label>
+                    <textarea id="news-content" class="form-input" placeholder="Write your news article here..."></textarea>
+                </div>
+                <div>
+                    <label for="news-image-url" class="block font-medium text-gray-300">Image URL (Optional)</label>
+                    <input type="text" id="news-image-url" class="form-input" placeholder="https://example.com/image.png" />
+                </div>
+                <button id="post-news-btn" class="btn btn-primary">Post News</button>
+            </div>
+        </div>
+
+        <div id="logs-tab" class="admin-tab-content hidden">
+            <div class="card">
+                <h2 class="text-2xl font-semibold mb-4 text-white">Event Logs</h2>
+                <button id="download-logs-btn" class="btn btn-secondary mb-4">Download Logs</button>
+                <div class="overflow-x-auto scrollable-table-container">
+                    <table class="w-full text-left table-auto border-collapse">
+                        <thead>
+                        <tr class="bg-gray-800">
+                            <th class="p-4 border-b border-gray-700 text-gray-300">Timestamp</th>
+                            <th class="p-4 border-b border-gray-700 text-gray-300">Event</th>
+                            <th class="p-4 border-b border-gray-700 text-gray-300">Details</th>
+                        </tr>
+                        </thead>
+                        <tbody id="logs-table">
+                        <!-- Logs will be injected here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="import-export" class="admin-tab-content hidden">
+            <div class="card space-y-4">
+                <h2 class="text-2xl font-semibold text-white">Import / Export User Data</h2>
+                <!-- Export Section -->
+                <div>
+                    <h3 class="text-lg font-medium mb-2 text-white">Export Data</h3>
+                    <p class="text-sm text-gray-400 mb-2">Download a JSON file with all user data.</p>
+                    <button id="export-download-btn" class="btn btn-secondary mb-2">Download User Data JSON</button>
+                </div>
+
+                <!-- Import Section -->
+                <div>
+                    <h3 class="text-lg font-medium mb-2 text-white">Import Data</h3>
+                    <p class="text-sm text-gray-400 mb-2">Upload a JSON file to import user data.</p>
+                    <input type="file" id="import-json-file" accept=".json" class="text-gray-300"/>
+                    <button id="import-file-btn" class="btn btn-primary mt-2">Import Data</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for general messages -->
+<div id="message-modal" class="modal">
+    <div class="modal-content">
+        <p id="modal-message" class="text-lg font-semibold mb-4 text-white"></p>
+        <button id="modal-close-btn" class="btn btn-primary w-full">OK</button>
+    </div>
+</div>
+
+<!-- Modal for user creation credentials -->
+<div id="credentials-modal" class="modal">
+    <div class="modal-content">
+        <h3 class="text-2xl font-bold mb-4 text-white">User Created!</h3>
+        <p class="text-sm text-gray-400 mb-2">Please save these credentials securely:</p>
+        <div class="text-left bg-gray-800 p-4 rounded-lg space-y-2">
+            <p class="text-gray-300"><strong>SYDID:</strong> <span id="new-sydid"></span></p>
+            <p class="text-gray-300"><strong>Gift Number:</strong> <span id="new-gift-number"></span></p>
+            <p class="text-gray-300"><strong>Password:</strong> <span id="modal-new-password"></span></p>
+            <p class="text-gray-300"><strong>Keyword:</strong> <span id="modal-new-keyword"></span></p>
+        </div>
+        <button id="credentials-close-btn" class="btn btn-primary w-full mt-4">OK</button>
+    </div>
+</div>
+
+<!-- Modal for business creation credentials -->
+<div id="business-credentials-modal" class="modal">
+    <div class="modal-content">
+        <h3 class="text-2xl font-bold mb-4 text-white">Business Created!</h3>
+        <p class="text-sm text-gray-400 mb-2">Please save these credentials securely:</p>
+        <div class="text-left bg-gray-800 p-4 rounded-lg space-y-2">
+            <p class="text-gray-300"><strong>SYBID:</strong> <span id="new-sybid"></span></p>
+            <p class="text-gray-300"><strong>Gift Number:</strong> <span id="new-business-gift-number"></span></p>
+            <p class="text-gray-300"><strong>Password:</strong> <span id="new-business-password"></span></p>
+            <p class="text-gray-300"><strong>Keyword:</strong> <span id="new-business-keyword"></span></p>
+        </div>
+        <button id="business-credentials-close-btn" class="btn btn-primary w-full mt-4">OK</button>
+    </div>
+</div>
+
+<!-- Modal for adding money -->
+<div id="add-money-modal" class="modal">
+    <div class="modal-content">
+        <h3 class="text-2xl font-bold mb-4 text-white">Add Money</h3>
+        <p id="add-money-user-name" class="mb-4 text-gray-300"></p>
+        <input type="number" id="add-money-amount-input" class="form-input mb-4" placeholder="Amount to add" required />
+        <div class="flex space-x-2">
+            <button id="add-money-confirm-btn" class="btn btn-primary w-full">Confirm</button>
+            <button id="add-money-cancel-btn" class="btn btn-secondary w-full">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for confirmation -->
+<div id="confirmation-modal" class="modal">
+    <div class="modal-content">
+        <p id="confirmation-message" class="text-lg font-semibold mb-4 text-white"></p>
+        <div class="flex justify-center space-x-4">
+            <button id="confirmation-yes-btn" class="btn btn-danger">Yes</button>
+            <button id="confirmation-no-btn" class="btn btn-secondary">No</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Credit Card Admin View/Edit -->
+<div id="card-admin-modal" class="modal">
+    <div class="modal-content">
+        <h3 class="text-2xl font-bold mb-4 text-white">Card Details</h3>
+        <div id="card-admin-info" class="text-left mb-4 text-gray-300">
+            <!-- Card details and purchases will be injected here -->
+        </div>
+        <h4 class="font-semibold mb-2 text-white">Add Purchase</h4>
+        <div>
+            <label for="purchase-desc" class="block font-medium text-gray-300">Description</label>
+            <input type="text" id="purchase-desc" class="form-input" placeholder="What was bought?" />
+        </div>
+        <div class="mt-2">
+            <label for="purchase-amount" class="block font-medium text-gray-300">Amount</label>
+            <input type="number" id="purchase-amount" class="form-input" placeholder="Amount spent" />
+        </div>
+        <div class="flex space-x-2 mt-4">
+            <button id="add-purchase-btn" class="btn btn-primary w-full">Add Purchase</button>
+            <button id="close-card-admin-btn" class="btn btn-secondary w-full">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for setting/entering PIN -->
+<div id="pin-modal" class="modal">
+    <div class="modal-content">
+        <h3 id="pin-modal-title" class="text-2xl font-bold mb-4 text-white"></h3>
+        <input type="password" id="pin-input" class="form-input mb-4" placeholder="Enter 5-digit PIN" maxlength="5" />
+        <div class="flex space-x-2">
+            <button id="pin-confirm-btn" class="btn btn-primary w-full">Confirm</button>
+            <button id="pin-cancel-btn" class="btn btn-secondary w-full">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Admin Password Change -->
+<div id="admin-password-change-modal" class="modal">
+    <div class="modal-content">
+        <h3 class="text-2xl font-bold mb-4 text-white">Admin Password Change Required</h3>
+        <p class="mb-4 text-gray-300">For security reasons, you must change your admin passwords every 30 days.</p>
+        <div class="space-y-4">
+            <div>
+                <label for="new-admin-password" class="block font-medium text-gray-300">New Password</label>
+                <input type="password" id="new-admin-password" class="form-input" required />
+            </div>
+            <div>
+                <label for="new-admin-passkey" class="block font-medium text-gray-300">New Passkey</label>
+                <input type="password" id="new-admin-passkey" class="form-input" required />
+            </div>
+            <div>
+                <label for="new-admin-govpasskey" class="block font-medium text-gray-300">New Govpasskey</label>
+                <input type="password" id="new-admin-govpasskey" class="form-input" required />
+            </div>
+        </div>
+        <button id="update-admin-password-btn" class="btn btn-primary w-full mt-4">Update and Log In</button>
+    </div>
+</div>
+
+<script>
+    const { createClient } = supabase;
+    const supabaseUrl = 'https://axvztxwocpubtrgpqern.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF4dnp0eHdvY3B1YnRyZ3BxZXJuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc5NzAzODQsImV4cCI6MjA3MzU0NjM4NH0.NI0j8Gl4AoFvmLwiv3YbccGQMwbwuFO0L_CXCTlVCbw';
+    const supabaseClient = createClient(supabaseUrl, supabaseKey);
+
+    // --- Caching Functions ---
+    function getCachedData(key) {
+        const cached = localStorage.getItem(key);
+        if (cached) {
+            try {
+                return JSON.parse(cached);
+            } catch (e) {
+                console.error("Error parsing cached data", e);
+                return null;
+            }
+        }
+        return null;
+    }
+
+    function setCachedData(key, data) {
+        try {
+            localStorage.setItem(key, JSON.stringify(data));
+        } catch (e) {
+            console.error("Error caching data", e);
+        }
+    }
+
+    window.onload = async function () {
+        // --- DOM Elements ---
+        const loadingScreen = document.getElementById('loading-screen');
+        const progressFill = document.getElementById('progress-fill');
+        const appContainer = document.getElementById('app-container');
+        const loginView = document.getElementById('login-view');
+        const userDashboardView = document.getElementById('user-dashboard-view');
+        const businessDashboardView = document.getElementById('business-dashboard-view');
+        const staffDashboardView = document.getElementById('staff-dashboard-view');
+        const adminDashboardView = document.getElementById('admin-dashboard-view');
+
+        // Login view
+        const userLoginBtn = document.getElementById('user-login-btn');
+        const businessLoginBtn = document.getElementById('business-login-btn');
+        const staffLoginBtn = document.getElementById('staff-login-btn');
+        const adminModeBtn = document.getElementById('admin-mode-btn');
+        const adminLoginBtn = document.getElementById('admin-login-btn');
+        const userModeBtn = document.getElementById('user-mode-btn');
+        const businessModeBtn = document.getElementById('business-mode-btn');
+        const staffModeBtn = document.getElementById('staff-mode-btn');
+        const createAccountRequestBtn = document.getElementById('create-account-request-btn');
+        const logoutBtn = document.getElementById('logout-btn');
+        const businessLogoutBtn = document.getElementById('business-logout-btn');
+        const staffLogoutBtn = document.getElementById('staff-logout-btn');
+        const adminLogoutBtn = document.getElementById('admin-logout-btn');
+
+        const userLoginError = document.getElementById('user-login-error');
+        const businessLoginError = document.getElementById('business-login-error');
+        const staffLoginError = document.getElementById('staff-login-error');
+        const adminLoginError = document.getElementById('admin-login-error');
+
+        // User dashboard elements
+        const userDisplayNameEl = document.getElementById('user-display-name');
+        const userGiftNumberEl = document.getElementById('user-gift-number');
+        const userBalanceEl = document.getElementById('user-balance');
+        const transactionListEl = document.getElementById('transaction-list');
+        const oldPasswordInput = document.getElementById('old-password');
+        const newPasswordInput = document.getElementById('new-password-input');
+        const newKeywordInput = document.getElementById('new-keyword-input');
+        const updateCredentialsBtn = document.getElementById('update-credentials-btn');
+
+        // User gifts tab
+        const giftRecipientIdInput = document.getElementById('gift-recipient-id');
+        const giftAmountInput = document.getElementById('gift-amount');
+        const giftTitleInput = document.getElementById('gift-title');
+        const giftMessageInput = document.getElementById('gift-message');
+        const sendGiftBtn = document.getElementById('send-gift-btn');
+        const pendingGiftsListEl = document.getElementById('pending-gifts-list');
+
+        // User card tab elements
+        const userCardInfo = document.getElementById('user-card-info');
+        const userDebitCardInfo = document.getElementById('user-debit-card-info');
+        const payDebtAmountInput = document.getElementById('pay-debt-amount');
+        const payDebtBtn = document.getElementById('pay-debt-btn');
+        const payDebtError = document.getElementById('pay-debt-error');
+        const creditScoreContainer = document.getElementById('credit-score-container');
+        const savingsVaultsContainer = document.getElementById('savings-vaults-container');
+        const newVaultTitleInput = document.getElementById('new-vault-title');
+        const createVaultBtn = document.getElementById('create-vault-btn');
+
+        // User loan tab elements
+        const loanAmountInput = document.getElementById('loan-amount');
+        const loanReasonInput = document.getElementById('loan-reason');
+        const requestLoanBtn = document.getElementById('request-loan-btn');
+        const loanListEl = document.getElementById('loan-list');
+
+        // User donate tab
+        const donationAmountInput = document.getElementById('donation-amount');
+        const donationReasonInput = document.getElementById('donation-reason');
+        const donateBtn = document.getElementById('donate-btn');
+
+        // Notifications
+        const notificationPopupContainer = document.getElementById('notification-popup-container');
+        const notificationHistory = document.getElementById('notification-history');
+        const lowBalanceNotificationCheckbox = document.getElementById('low-balance-notification');
+        const highDebtNotificationCheckbox = document.getElementById('high-debt-notification');
+        const largeTransactionNotificationCheckbox = document.getElementById('large-transaction-notification');
+        const paymentReminderNotificationCheckbox = document.getElementById('payment-reminder-notification');
+
+        // Goals
+        const monthlyGoalInput = document.getElementById('monthly-goal');
+        const setGoalBtn = document.getElementById('set-goal-btn');
+        const goalProgressContainer = document.getElementById('goal-progress-container');
+
+        // Business dashboard elements
+        const businessDisplayNameEl = document.getElementById('business-display-name');
+        const businessGiftNumberEl = document.getElementById('business-gift-number');
+        const businessBalanceEl = document.getElementById('business-balance');
+        const businessGiftSydidInput = document.getElementById('business-gift-sydid');
+        const businessGiftAmountInput = document.getElementById('business-gift-amount');
+        const businessGiftBtn = document.getElementById('business-gift-btn');
+        const businessGiftError = document.getElementById('business-gift-error');
+        const payUserSydidInput = document.getElementById('pay-user-sydid');
+        const payUserAmountInput = document.getElementById('pay-user-amount');
+        const payUserBtn = document.getElementById('pay-user-btn');
+        const payUserError = document.getElementById('pay-user-error');
+        const chargeCardNumberInput = document.getElementById('charge-card-number');
+        const chargeConfirmationNumberInput = document.getElementById('charge-confirmation-number');
+        const chargeSecurityCodeInput = document.getElementById('charge-security-code');
+        const inventoryItemSelect = document.getElementById('inventory-item-select');
+        const chargeProductNameInput = document.getElementById('charge-product-name');
+        const chargeAmountInput = document.getElementById('charge-amount');
+        const chargeBtn = document.getElementById('charge-btn');
+        const chargeError = document.getElementById('charge-error');
+        const chargeCreditScore = document.getElementById('charge-credit-score');
+        const creditScoreDisplay = document.getElementById('credit-score-display');
+
+        // Business Inventory
+        const itemNameInput = document.getElementById('item-name');
+        const itemPriceInput = document.getElementById('item-price');
+        const addItemBtn = document.getElementById('add-item-btn');
+        const inventoryList = document.getElementById('inventory-list');
+
+        // Business Staff
+        const staffNameInput = document.getElementById('staff-name');
+        const staffUsernameInput = document.getElementById('staff-username');
+        const staffPasswordInput = document.getElementById('staff-password');
+        const createStaffBtn = document.getElementById('create-staff-btn');
+        const staffList = document.getElementById('staff-list');
+
+        // Staff Dashboard
+        const staffDisplayNameEl = document.getElementById('staff-display-name');
+        const staffChargeCardNumberInput = document.getElementById('staff-charge-card-number');
+        const staffChargeConfirmationNumberInput = document.getElementById('staff-charge-confirmation-number');
+        const staffChargeSecurityCodeInput = document.getElementById('staff-charge-security-code');
+        const staffInventoryItemSelect = document.getElementById('staff-inventory-item-select');
+        const staffSellBtn = document.getElementById('staff-sell-btn');
+        const staffSellError = document.getElementById('staff-sell-error');
+
+        // Admin dashboard elements
+        const adminLoginForm = document.getElementById('admin-login-form');
+        const adminUsernameInput = document.getElementById('admin-username');
+        const adminPasswordInput = document.getElementById('admin-password');
+        const adminPasskeyInput = document.getElementById('admin-passkey');
+        const adminGovPasskeyInput = document.getElementById('admin-govpasskey');
+        const secureGovCodeInput = document.getElementById('secure-gov-code');
+        const sendCodeBtn = document.getElementById('send-code-btn');
+        const newUserInput = document.getElementById('new-user-name');
+        const createUserBtn = document.getElementById('create-user-btn');
+        const createUserStatus = document.getElementById('create-user-status');
+        const userListTable = document.getElementById('user-list-table');
+        const userSearchInput = document.getElementById('user-search');
+        const newBusinessNameInput = document.getElementById('new-business-name');
+        const createBusinessBtn = document.getElementById('create-business-btn');
+        const createBusinessStatus = document.getElementById('create-business-status');
+        const businessListTable = document.getElementById('business-list-table');
+        const businessSearchInput = document.getElementById('business-search');
+        const cardUserSydidInput = document.getElementById('card-user-sydid');
+        const cardTypeInput = document.getElementById('card-type');
+        const createCardBtn = document.getElementById('create-card-btn');
+        const createCardStatus = document.getElementById('create-card-status');
+        const cardUserListTable = document.getElementById('card-user-list-table');
+        const cardUserSearchInput = document.getElementById('card-user-search');
+        const loanApplicationsTable = document.getElementById('loan-applications-table');
+        const accountRequestsTable = document.getElementById('account-requests-table');
+        const allDebtsTable = document.getElementById('all-debts-table');
+        const taxAmountInput = document.getElementById('tax-amount');
+        const collectTaxBtn = document.getElementById('collect-tax-btn');
+        const interestRateInput = document.getElementById('interest-rate');
+        const setInterestRateBtn = document.getElementById('set-interest-rate-btn');
+        const payInterestBtn = document.getElementById('pay-interest-btn');
+        const sendReportsBtn = document.getElementById('send-reports-btn');
+        const logsTable = document.getElementById('logs-table');
+        const downloadLogsBtn = document.getElementById('download-logs-btn');
+
+        // News Management
+        const newsManagementTab = document.getElementById('news-management');
+        const newsTitleInput = document.getElementById('news-title');
+        const newsContentInput = document.getElementById('news-content');
+        const newsImageUrlInput = document.getElementById('news-image-url');
+        const postNewsBtn = document.getElementById('post-news-btn');
+
+        const adminPasswordChangeModal = document.getElementById('admin-password-change-modal');
+        const newAdminPasswordInput = document.getElementById('new-admin-password');
+        const newAdminPasskeyInput = document.getElementById('new-admin-passkey');
+        const newAdminGovpasskeyInput = document.getElementById('new-admin-govpasskey');
+        const updateAdminPasswordBtn = document.getElementById('update-admin-password-btn');
+
+        const exportDownloadBtn = document.getElementById('export-download-btn');
+        const importJsonFileInput = document.getElementById('import-json-file');
+        const importFileBtn = document.getElementById('import-file-btn');
+
+        const messageModal = document.getElementById('message-modal');
+        const modalMessage = document.getElementById('modal-message');
+        const modalCloseBtn = document.getElementById('modal-close-btn');
+
+        const credentialsModal = document.getElementById('credentials-modal');
+        const newSydidEl = document.getElementById('new-sydid');
+        const newGiftNumberEl = document.getElementById('new-gift-number');
+        const newPasswordEl = document.getElementById('modal-new-password');
+        const newKeywordEl = document.getElementById('modal-new-keyword');
+        const credentialsCloseBtn = document.getElementById('credentials-close-btn');
+
+        const businessCredentialsModal = document.getElementById('business-credentials-modal');
+        const newSybidEl = document.getElementById('new-sybid');
+        const newBusinessGiftNumberEl = document.getElementById('new-business-gift-number');
+        const newBusinessPasswordEl = document.getElementById('new-business-password');
+        const newBusinessKeywordEl = document.getElementById('new-business-keyword');
+        const businessCredentialsCloseBtn = document.getElementById('business-credentials-close-btn');
+
+        const addMoneyModal = document.getElementById('add-money-modal');
+        const addMoneyUserNameEl = document.getElementById('add-money-user-name');
+        const addMoneyAmountInput = document.getElementById('add-money-amount-input');
+        const addMoneyConfirmBtn = document.getElementById('add-money-confirm-btn');
+        const addMoneyCancelBtn = document.getElementById('add-money-cancel-btn');
+        let selectedUserIdForAddMoney = null;
+
+        const confirmationModal = document.getElementById('confirmation-modal');
+        const confirmationMessageEl = document.getElementById('confirmation-message');
+        const confirmationYesBtn = document.getElementById('confirmation-yes-btn');
+        const confirmationNoBtn = document.getElementById('confirmation-no-btn');
+        let confirmationResolver = null;
+
+        const cardAdminModal = document.getElementById('card-admin-modal');
+        const cardAdminInfo = document.getElementById('card-admin-info');
+        const purchaseDescInput = document.getElementById('purchase-desc');
+        const purchaseAmountInput = document.getElementById('purchase-amount');
+        const addPurchaseBtn = document.getElementById('add-purchase-btn');
+        const closeCardAdminBtn = document.getElementById('close-card-admin-btn');
+
+        const pinModal = document.getElementById('pin-modal');
+        const pinModalTitle = document.getElementById('pin-modal-title');
+        const pinInput = document.getElementById('pin-input');
+        const pinConfirmBtn = document.getElementById('pin-confirm-btn');
+        const pinCancelBtn = document.getElementById('pin-cancel-btn');
+        let pinResolver = null;
+        let cardToModify = null;
+        let pinAction = null;
+
+        const userTabs = document.getElementById('user-tabs');
+        const dashboardTab = document.getElementById('dashboard-tab');
+        const cardsLoansTab = document.getElementById('cards-loans-tab');
+        const creditScoreTab = document.getElementById('credit-score-tab');
+        const savingsTab = document.getElementById('savings-tab');
+        const donateTab = document.getElementById('donate-tab');
+        const notificationsTab = document.getElementById('notifications-tab');
+        const goalsTab = document.getElementById('goals-tab');
+
+        const businessTabs = document.getElementById('business-tabs');
+        const businessDashboardTab = document.getElementById('business-dashboard-tab');
+        const inventoryTab = document.getElementById('inventory-tab');
+        const staffTab = document.getElementById('staff-tab');
+
+        const adminSectionTabs = document.getElementById('admin-section-tabs');
+        const adminUserManagement = document.getElementById('user-management');
+        const adminBusinessManagement = document.getElementById('business-management');
+        const adminFinancialManagement = document.getElementById('financial-management');
+        const adminLogsTab = document.getElementById('logs-tab');
+        const adminImportExport = document.getElementById('import-export');
+
+        // --- Modal & Message Logic ---
+        function showMessage(message) {
+            modalMessage.textContent = message;
+            messageModal.style.display = 'flex';
+        }
+
+        modalCloseBtn.addEventListener('click', () => {
+            messageModal.style.display = 'none';
+        });
+
+        function showCredentialsModal(sydid, giftNumber, password, keyword) {
+            newSydidEl.textContent = sydid;
+            newGiftNumberEl.textContent = giftNumber;
+            newPasswordEl.textContent = password;
+            newKeywordEl.textContent = keyword;
+            credentialsModal.style.display = 'flex';
+        }
+
+        credentialsCloseBtn.addEventListener('click', () => {
+            credentialsModal.style.display = 'none';
+        });
+
+        function showBusinessCredentialsModal(sybid, giftNumber, password, keyword) {
+            newSybidEl.textContent = sybid;
+            newBusinessGiftNumberEl.textContent = giftNumber;
+            newBusinessPasswordEl.textContent = password;
+            newBusinessKeywordEl.textContent = keyword;
+            businessCredentialsModal.style.display = 'flex';
+        }
+
+        businessCredentialsCloseBtn.addEventListener('click', () => {
+            businessCredentialsModal.style.display = 'none';
+        });
+
+        function showConfirmation(message) {
+            return new Promise(resolve => {
+                confirmationMessageEl.textContent = message;
+                confirmationModal.style.display = 'flex';
+                confirmationResolver = resolve;
+            });
+        }
+
+        confirmationYesBtn.addEventListener('click', () => {
+            if (confirmationResolver) {
+                confirmationResolver(true);
+                confirmationModal.style.display = 'none';
+            }
+        });
+
+        confirmationNoBtn.addEventListener('click', () => {
+            if (confirmationResolver) {
+                confirmationResolver(false);
+                confirmationModal.style.display = 'none';
+            }
+        });
+
+        function showPinModal(title, card, action) {
+            return new Promise(resolve => {
+                pinModalTitle.textContent = title;
+                pinInput.value = '';
+                pinModal.style.display = 'flex';
+                pinResolver = resolve;
+                cardToModify = card;
+                pinAction = action;
+            });
+        }
+
+        pinConfirmBtn.addEventListener('click', () => {
+            if (pinResolver) {
+                pinResolver(pinInput.value);
+                pinModal.style.display = 'none';
+            }
+        });
+
+        pinCancelBtn.addEventListener('click', () => {
+            if (pinResolver) {
+                pinResolver(null);
+                pinModal.style.display = 'none';
+            }
+        });
+
+        // --- Progress Bar ---
+        function updateProgress(percentage) {
+            progressFill.style.width = percentage + '%';
+        }
+
+        // --- Session and State ---
+        let currentUserId = null;
+        let currentUserType = null; // 'user', 'business', or 'staff'
+        let currentBusinessSybid = null; // For staff
+        let isAdmin = false;
+        let activeChannels = [];
+
+        // --- Session Timeout ---
+        const INACTIVITY_TIMEOUT_MS = 1800000; // 30 minutes
+        let inactivityTimeout;
+
+        function resetInactivityTimer() {
+            clearTimeout(inactivityTimeout);
+            inactivityTimeout = setTimeout(() => logOut('timeout'), INACTIVITY_TIMEOUT_MS);
+        }
+
+        async function logOut(reason = 'manual') {
+            currentUserId = null;
+            currentUserType = null;
+            currentBusinessSybid = null;
+            isAdmin = false;
+            localStorage.removeItem('adminStaySignedIn');
+            if (activeChannels.length > 0) {
+                await supabaseClient.removeAllChannels();
+                activeChannels = [];
+            }
+            await supabaseClient.auth.signOut();
+            showView('login-view');
+            if (reason === 'timeout') {
+                showMessage("Your session timed out due to inactivity, please log-in again.");
+            } else {
+                showMessage("You have been logged out.");
+            }
+            document.querySelectorAll('input').forEach(input => input.value = '');
+            document.querySelectorAll('textarea').forEach(textarea => textarea.value = '');
+        }
+
+        document.addEventListener('mousemove', resetInactivityTimer);
+        document.addEventListener('keydown', resetInactivityTimer);
+        document.addEventListener('click', resetInactivityTimer);
+
+        resetInactivityTimer();
+
+        // --- View Management ---
+        function showView(viewId) {
+            window.scrollTo(0, 0);
+            loginView.classList.add('hidden');
+            userDashboardView.classList.add('hidden');
+            businessDashboardView.classList.add('hidden');
+            staffDashboardView.classList.add('hidden');
+            adminDashboardView.classList.add('hidden');
+            document.getElementById(viewId).classList.remove('hidden');
+        }
+
+        // --- Login Mode Switching ---
+        userModeBtn.addEventListener('click', () => {
+            document.getElementById('user-login-form').classList.remove('hidden');
+            document.getElementById('business-login-form').classList.add('hidden');
+            document.getElementById('staff-login-form').classList.add('hidden');
+            userModeBtn.classList.add('hidden');
+            businessModeBtn.classList.remove('hidden');
+            staffModeBtn.classList.remove('hidden');
+        });
+
+        businessModeBtn.addEventListener('click', () => {
+            document.getElementById('user-login-form').classList.add('hidden');
+            document.getElementById('business-login-form').classList.remove('hidden');
+            document.getElementById('staff-login-form').classList.add('hidden');
+            userModeBtn.classList.remove('hidden');
+            businessModeBtn.classList.add('hidden');
+            staffModeBtn.classList.remove('hidden');
+        });
+
+        staffModeBtn.addEventListener('click', () => {
+            document.getElementById('user-login-form').classList.add('hidden');
+            document.getElementById('business-login-form').classList.add('hidden');
+            document.getElementById('staff-login-form').classList.remove('hidden');
+            userModeBtn.classList.remove('hidden');
+            businessModeBtn.classList.remove('hidden');
+            staffModeBtn.classList.add('hidden');
+        });
+
+        createAccountRequestBtn.addEventListener('click', async () => {
+            const fullName = prompt("Please enter your full name to request an account:");
+            if (fullName && fullName.trim() !== '') {
+                const { error } = await supabaseClient.from('account_requests').insert([{ full_name: fullName.trim() }]);
+                if (error) {
+                    showMessage("Error submitting account request: " + error.message);
+                } else {
+                    showMessage("Account request submitted successfully! An admin will review it shortly.");
+                }
+            }
+        });
+
+        // --- User Authentication ---
+        userLoginBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            userLoginError.classList.add('hidden');
+
+            const sydid = document.getElementById('sydid').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const keyword = document.getElementById('keyword').value.trim();
+
+            if (sydid.length !== 9 || password.length !== 6 || keyword.length !== 4) {
+                userLoginError.textContent = 'Please enter valid credentials.';
+                userLoginError.classList.remove('hidden');
+                return;
+            }
+
+            const { data, error } = await supabaseClient
+                .from('users')
+                .select('*')
+                .eq('sydid', sydid)
+                .single();
+
+            if (error || !data) {
+                userLoginError.textContent = 'Invalid credentials.';
+                userLoginError.classList.remove('hidden');
+                return;
+            }
+
+            if (data.password === password && data.keyword === keyword) {
+                currentUserId = data.sydid;
+                currentUserType = 'user';
+                isAdmin = data.isAdmin;
+
+                if (isAdmin) {
+                    showView('admin-dashboard-view');
+                    activateAdminTab('user-management');
+                    setupAdminRealtime();
+                } else {
+                    showView('user-dashboard-view');
+                    setupUserRealtime(currentUserId);
+                }
+                resetInactivityTimer();
+            } else {
+                userLoginError.textContent = 'Invalid credentials.';
+                userLoginError.classList.remove('hidden');
+            }
+        });
+
+        businessLoginBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            businessLoginError.classList.add('hidden');
+
+            const sybid = document.getElementById('sybid').value.trim();
+            const password = document.getElementById('business-password').value.trim();
+            const keyword = document.getElementById('business-keyword').value.trim();
+
+            if (sybid.length !== 9 || password.length !== 8 || keyword.length !== 4) {
+                businessLoginError.textContent = 'Please enter valid credentials.';
+                businessLoginError.classList.remove('hidden');
+                return;
+            }
+
+            const { data, error } = await supabaseClient
+                .from('businesses')
+                .select('*')
+                .eq('sybid', sybid)
+                .single();
+
+            if (error || !data) {
+                businessLoginError.textContent = 'Invalid credentials.';
+                businessLoginError.classList.remove('hidden');
+                return;
+            }
+
+            if (data.password === password && data.keyword === keyword) {
+                currentUserId = data.sybid;
+                currentUserType = 'business';
+                showView('business-dashboard-view');
+                setupBusinessRealtime(currentUserId);
+                resetInactivityTimer();
+            } else {
+                businessLoginError.textContent = 'Invalid credentials.';
+                businessLoginError.classList.remove('hidden');
+            }
+        });
+
+        staffLoginBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            staffLoginError.classList.add('hidden');
+
+            const username = document.getElementById('staff-username-login').value.trim();
+            const password = document.getElementById('staff-password-login').value.trim();
+
+            if (!username || !password) {
+                staffLoginError.textContent = 'Please enter valid credentials.';
+                staffLoginError.classList.remove('hidden');
+                return;
+            }
+
+            const { data, error } = await supabaseClient
+                .from('staff')
+                .select('*')
+                .eq('username', username)
+                .single();
+
+            if (error || !data || data.password !== password) {
+                staffLoginError.textContent = 'Invalid credentials.';
+                staffLoginError.classList.remove('hidden');
+                return;
+            }
+
+            currentUserId = data.username;
+            currentUserType = 'staff';
+            currentBusinessSybid = data.business_sybid;
+            showView('staff-dashboard-view');
+            setupStaffRealtime(currentBusinessSybid, data.name);
+            resetInactivityTimer();
+        });
+
+        adminModeBtn.addEventListener('click', () => {
+            adminLoginForm.classList.toggle('hidden');
+        });
+
+        // Admin login secure code generation
+        let generatedSecureCode = null;
+        sendCodeBtn.addEventListener('click', () => {
+            generatedSecureCode = Math.floor(10000000 + Math.random() * 90000000).toString();
+            showMessage(`A secure 8-digit code has been sent to rsloth6@gmail.com. Please check your inbox and enter the code. Your code is: ${generatedSecureCode}`);
+        });
+
+        adminLoginBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            const username = adminUsernameInput.value.trim();
+            const password = adminPasswordInput.value.trim();
+            const passkey = adminPasskeyInput.value.trim();
+            const govpasskey = adminGovPasskeyInput.value.trim();
+            const secureCode = secureGovCodeInput.value.trim();
+
+            if (username === 'GOV' && password === 'Securegov' && passkey === '10191212' && govpasskey === '0805' && secureCode === generatedSecureCode) {
+                const staySignedIn = document.getElementById('admin-stay-signed-in').checked;
+                if (staySignedIn) {
+                    localStorage.setItem('adminStaySignedIn', 'true');
+                } else {
+                    localStorage.removeItem('adminStaySignedIn');
+                }
+
+                const lastChanged = localStorage.getItem('adminPasswordLastChanged');
+                if (lastChanged && (new Date() - new Date(lastChanged)) > 30 * 24 * 60 * 60 * 1000) {
+                    adminPasswordChangeModal.style.display = 'flex';
+                } else {
+                    isAdmin = true;
+                    currentUserId = 'admin';
+                    showView('admin-dashboard-view');
+                    activateAdminTab('user-management');
+                    setupAdminRealtime();
+                    resetInactivityTimer();
+                    adminLoginError.classList.add('hidden');
+                }
+            } else {
+                adminLoginError.textContent = 'Invalid credentials. Please check all fields and the SecureGOVnumber.';
+                adminLoginError.classList.remove('hidden');
+            }
+        });
+
+        updateAdminPasswordBtn.addEventListener('click', () => {
+            // In a real app, you would securely update the password on the server.
+            // For this simulation, we'll just update a local storage flag.
+            const newPassword = newAdminPasswordInput.value;
+            const newPasskey = newAdminPasskeyInput.value;
+            const newGovpasskey = newAdminGovpasskeyInput.value;
+
+            if (newPassword && newPasskey && newGovpasskey) {
+                localStorage.setItem('adminPasswordLastChanged', new Date().toISOString());
+                adminPasswordChangeModal.style.display = 'none';
+                isAdmin = true;
+                currentUserId = 'admin';
+                showView('admin-dashboard-view');
+                activateAdminTab('user-management');
+                setupAdminRealtime();
+                resetInactivityTimer();
+                adminLoginError.classList.add('hidden');
+            } else {
+                showMessage("Please fill all fields.");
+            }
+        });
+
+        logoutBtn.addEventListener('click', () => logOut('manual'));
+        businessLogoutBtn.addEventListener('click', () => logOut('manual'));
+        staffLogoutBtn.addEventListener('click', () => logOut('manual'));
+        adminLogoutBtn.addEventListener('click', () => logOut('manual'));
+
+        // --- Realtime Setup ---
+        function setupUserRealtime(sydid) {
+            if (activeChannels.length > 0) {
+                supabaseClient.removeAllChannels();
+                activeChannels = [];
+            }
+
+            listenToUserData(sydid);
+            listenToTransactions(sydid);
+            listenToUserLoans(sydid);
+            listenToPendingGifts(sydid);
+            renderUserCardTab();
+            renderUserDebitCardTab();
+            renderCreditScoreTab();
+            renderSavingsTab();
+            listenToNotificationSettings();
+            renderNotificationHistory();
+
+            const userChannel = supabaseClient.channel(`user-${sydid}-channel`)
+                .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'users', filter: `sydid=eq.${sydid}` }, payload => {
+                    listenToUserData(sydid);
+                    renderUserCardTab();
+                    renderUserDebitCardTab();
+                    renderCreditScoreTab();
+                    renderSavingsTab();
+                    listenToNotificationSettings();
+                    renderNotificationHistory();
+                }).subscribe();
+
+            const giftsChannel = supabaseClient.channel(`user-${sydid}-gifts-channel`)
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'pending_gifts', filter: `recipient_id=eq.${sydid}` }, payload => {
+                    listenToPendingGifts(sydid);
+                }).subscribe();
+
+            const transactionsChannel = supabaseClient.channel(`user-${sydid}-transactions-channel`)
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'transactions', filter: `recipientId=eq.${sydid}` }, payload => {
+                    listenToTransactions(sydid);
+                }).subscribe();
+
+            const loansChannel = supabaseClient.channel(`user-${sydid}-loans-channel`)
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'loans', filter: `applicant_id=eq.${sydid}` }, payload => {
+                    listenToUserLoans(sydid);
+                }).subscribe();
+
+            activeChannels.push(userChannel, giftsChannel, transactionsChannel, loansChannel);
+        }
+
+        function setupBusinessRealtime(sybid) {
+            if (activeChannels.length > 0) {
+                supabaseClient.removeAllChannels();
+                activeChannels = [];
+            }
+
+            listenToBusinessData(sybid);
+            renderInventory(sybid);
+            renderStaffList(sybid);
+
+            const businessChannel = supabaseClient.channel(`business-${sybid}-channel`)
+                .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'businesses', filter: `sybid=eq.${sybid}` }, payload => {
+                    listenToBusinessData(sybid);
+                    renderInventory(sybid);
+                }).subscribe();
+
+            const staffChannel = supabaseClient.channel(`business-${sybid}-staff-channel`)
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'staff', filter: `business_sybid=eq.${sybid}` }, payload => {
+                    renderStaffList(sybid);
+                }).subscribe();
+
+            activeChannels.push(businessChannel, staffChannel);
+        }
+
+        function setupStaffRealtime(businessSybid, staffName) {
+            if (activeChannels.length > 0) {
+                supabaseClient.removeAllChannels();
+                activeChannels = [];
+            }
+
+            staffDisplayNameEl.textContent = `Logged in as: ${staffName}`;
+            renderStaffInventory(businessSybid);
+
+            const staffBusinessChannel = supabaseClient.channel(`staff-business-${businessSybid}-channel`)
+                .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'businesses', filter: `sybid=eq.${businessSybid}` }, payload => {
+                    renderStaffInventory(businessSybid);
+                }).subscribe();
+
+            activeChannels.push(staffBusinessChannel);
+        }
+
+        function setupAdminRealtime() {
+            // Initial data load
+            listenToAllUsers();
+            listenToAllBusinesses();
+            populateCardUserList();
+            listenToAllLoans();
+            listenToAccountRequests();
+            listenToInterestRate();
+            listenToAllDebts();
+            listenToLogs();
+
+            // Remove any existing channels
+            if (activeChannels.length > 0) {
+                supabaseClient.removeAllChannels();
+                activeChannels = [];
+            }
+
+            const adminChannel = supabaseClient
+                .channel('admin-realtime-channel')
+                .on('postgres_changes', { event: '*', schema: 'public' }, (payload) => {
+                    console.log('Change received!', payload); // For debugging
+                    switch (payload.table) {
+                        case 'users':
+                            listenToAllUsers();
+                            populateCardUserList();
+                            listenToAllDebts();
+                            break;
+                        case 'businesses':
+                            listenToAllBusinesses();
+                            break;
+                        case 'loans':
+                            listenToAllLoans();
+                            listenToAllDebts();
+                            break;
+                        case 'account_requests':
+                            listenToAccountRequests();
+                            break;
+                        case 'settings':
+                            listenToInterestRate();
+                            break;
+                        case 'event_logs':
+                            listenToLogs();
+                            break;
+                        case 'news':
+                            // No action needed on client, admin is the one posting
+                            break;
+                        default:
+                            break;
+                    }
+                })
+                .subscribe();
+
+            activeChannels.push(adminChannel);
+        }
+
+
+        // --- User Dashboard Logic ---
+        async function listenToUserData(sydid) {
+            const cacheKey = `user-data-${sydid}`;
+            const cached = getCachedData(cacheKey);
+            if (cached) {
+                renderUserData(cached);
+            }
+
+            const { data: user, error } = await supabaseClient
+                .from('users')
+                .select('*')
+                .eq('sydid', sydid)
+                .single();
+
+            if (error || !user) {
+                if (!cached) showMessage("User data not found.");
+                return;
+            }
+            renderUserData(user);
+            setCachedData(cacheKey, user);
+        }
+
+        function renderUserData(user) {
+            userDisplayNameEl.textContent = `Logged in as: ${user.name}`;
+            userGiftNumberEl.textContent = user.gift_number;
+            userBalanceEl.textContent = `${user.balance.toFixed(2)} SYL`;
+
+            if (user.notification_settings && user.notification_settings.lowBalance && user.balance < 100) {
+                createNotification('Your balance is low.', 'lowBalance');
+            }
+        }
+
+        async function listenToTransactions(sydid) {
+            const { data: transactions, error } = await supabaseClient
+                .from('transactions')
+                .select('*')
+                .or(`senderId.eq.${sydid},recipientId.eq.${sydid}`);
+
+            if (error) {
+                showMessage("Error fetching transactions.");
+                return;
+            }
+            renderTransactions(transactions, sydid);
+        }
+
+        function renderTransactions(transactions, currentSydid) {
+            transactionListEl.innerHTML = '';
+            if (transactions.length === 0) {
+                transactionListEl.innerHTML = '<p class="text-gray-400 text-center">No transactions yet.</p>';
+                return;
+            }
+
+            transactions.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+            transactions.forEach(tx => {
+                const item = document.createElement('div');
+                item.className = 'transaction-item';
+                let displayText = '';
+                let amountText = '';
+
+                if (tx.senderId === currentSydid && tx.type === 'gift') {
+                    displayText = `Gifted to ${tx.recipientId}`;
+                    amountText = `<span class="text-red-400">- ${tx.amount.toFixed(2)} SYL</span>`;
+                } else if (tx.recipientId === currentSydid && tx.type === 'gift') {
+                    displayText = `Received from ${tx.senderId}`;
+                    amountText = `<span class="text-green-400">+ ${tx.amount.toFixed(2)} SYL</span>`;
+                }
+
+                item.innerHTML = `
+                <span class="font-medium text-gray-300">${displayText}</span>
+                <span class="text-gray-300">${amountText}</span>
+            `;
+                transactionListEl.appendChild(item);
+            });
+        }
+
+        updateCredentialsBtn.addEventListener('click', async () => {
+            const oldPassword = oldPasswordInput.value;
+            const newPassword = newPasswordInput.value;
+            const newKeyword = newKeywordInput.value;
+
+            const { data: user, error } = await supabaseClient
+                .from('users')
+                .select('*')
+                .eq('sydid', currentUserId)
+                .single();
+
+            if (error || !user) {
+                showMessage("User not found.");
+                await logOut();
+                return;
+            }
+
+            if (user.password !== oldPassword) {
+                showMessage("Old password does not match.");
+                return;
+            }
+
+            if (newPassword.length !== 6) {
+                showMessage("New password must be 6 digits.");
+                return;
+            }
+            if (newKeyword.length !== 4) {
+                showMessage("New keyword must be 4 digits.");
+                return;
+            }
+
+            await supabaseClient
+                .from('users')
+                .update({ password: newPassword, keyword: newKeyword })
+                .eq('sydid', currentUserId);
+
+            showMessage("Credentials updated successfully!");
+            oldPasswordInput.value = '';
+            newPasswordInput.value = '';
+            newKeywordInput.value = '';
+        });
+
+        // --- Business Dashboard Logic ---
+        async function listenToBusinessData(sybid) {
+            const cacheKey = `business-data-${sybid}`;
+            const cached = getCachedData(cacheKey);
+            if (cached) {
+                renderBusinessData(cached);
+            }
+
+            const { data: business, error } = await supabaseClient
+                .from('businesses')
+                .select('*')
+                .eq('sybid', sybid)
+                .single();
+
+            if (error || !business) {
+                if (!cached) showMessage("Business data not found.");
+                return;
+            }
+            renderBusinessData(business);
+            setCachedData(cacheKey, business);
+        }
+
+        function renderBusinessData(business) {
+            businessDisplayNameEl.textContent = `Logged in as: ${business.name}`;
+            businessGiftNumberEl.textContent = business.gift_number;
+            businessBalanceEl.textContent = `${business.balance.toFixed(2)} SYL`;
+        }
+
+        async function renderStaffList(sybid) {
+            const cacheKey = `staff-list-${sybid}`;
+            const cachedData = getCachedData(cacheKey);
+            if (cachedData) {
+                displayStaffList(cachedData);
+            }
+
+            const { data, error } = await supabaseClient.from('staff').select('*').eq('business_sybid', sybid);
+            if (error) {
+                if (!cachedData) showMessage("Error fetching staff list.");
+                return;
+            }
+            
+            displayStaffList(data);
+            setCachedData(cacheKey, data);
+        }
+
+        function displayStaffList(staffData) {
+            staffList.innerHTML = '';
+            if (!staffData || staffData.length === 0) {
+                staffList.innerHTML = '<p class="text-gray-400 text-center">No staff members found.</p>';
+                return;
+            }
+
+            staffData.forEach(staff => {
+                const item = document.createElement('div');
+                item.className = 'flex justify-between items-center p-2 border-b border-gray-700';
+                item.innerHTML = `
+                    <span class="text-gray-300"><strong>${staff.name}</strong> (${staff.username})</span>
+                    <button class="btn btn-danger btn-sm delete-staff-btn" data-staff-id="${staff.id}">Delete</button>
+                `;
+                staffList.appendChild(item);
+            });
+
+            document.querySelectorAll('.delete-staff-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const staffId = e.target.dataset.staffId;
+                    const confirmed = await showConfirmation("Are you sure you want to delete this staff member?");
+                    if (confirmed) {
+                        await supabaseClient.from('staff').delete().eq('id', staffId);
+                    }
+                });
+            });
+        }
+
+        businessGiftBtn.addEventListener('click', async () => {
+            const recipientId = businessGiftSydidInput.value.trim();
+            const amount = parseFloat(businessGiftAmountInput.value);
+
+            if (recipientId === currentUserId) {
+                showMessage("Cannot gift funds to yourself.");
+                return;
+            }
+            if (recipientId.length !== 9) {
+                showMessage("Recipient ID must be 9 digits.");
+                return;
+            }
+            if (isNaN(amount) || amount <= 0) {
+                showMessage("Please enter a valid positive amount.");
+                return;
+            }
+
+            const { data: sender, error: senderError } = await supabaseClient
+                .from('businesses')
+                .select('*')
+                .eq('sybid', currentUserId)
+                .single();
+
+            if (senderError || !sender) {
+                showMessage("Sender account not found.");
+                await logOut();
+                return;
+            }
+
+            let recipientTable = 'users';
+            let recipientIdField = 'sydid';
+            if (recipientId.startsWith('B')) {
+                recipientTable = 'businesses';
+                recipientIdField = 'sybid';
+            }
+
+            const { data: recipient, error: recipientError } = await supabaseClient
+                .from(recipientTable)
+                .select('*')
+                .eq(recipientIdField, recipientId)
+                .single();
+
+            if (recipientError || !recipient) {
+                showMessage("Recipient ID not found.");
+                return;
+            }
+
+            if (sender.balance < amount) {
+                showMessage("Insufficient funds to gift.");
+                return;
+            }
+
+            const newSenderBalance = sender.balance - amount;
+            const newRecipientBalance = recipient.balance + amount;
+
+            await supabaseClient
+                .from('businesses')
+                .update({ balance: newSenderBalance })
+                .eq('sybid', currentUserId);
+
+            await supabaseClient
+                .from(recipientTable)
+                .update({ balance: newRecipientBalance })
+                .eq(recipientIdField, recipientId);
+
+            await supabaseClient.from('transactions').insert([
+                { type: 'gift', amount: amount, senderId: currentUserId, recipientId: recipientId, timestamp: new Date() },
+            ]);
+
+            showMessage(`Successfully gifted ${amount.toFixed(2)} SYL to user ${recipientId}.`);
+            businessGiftSydidInput.value = '';
+            businessGiftAmountInput.value = '';
+        });
+
+        payUserBtn.addEventListener('click', async () => {
+            const recipientId = payUserSydidInput.value.trim();
+            const amount = parseFloat(payUserAmountInput.value);
+
+            if (recipientId === currentUserId) {
+                showMessage("Cannot pay yourself.");
+                return;
+            }
+            if (recipientId.length !== 9) {
+                showMessage("Recipient ID must be 9 digits.");
+                return;
+            }
+            if (isNaN(amount) || amount <= 0) {
+                showMessage("Please enter a valid positive amount.");
+                return;
+            }
+
+            const { data: sender, error: senderError } = await supabaseClient
+                .from('businesses')
+                .select('*')
+                .eq('sybid', currentUserId)
+                .single();
+
+            if (senderError || !sender) {
+                showMessage("Sender account not found.");
+                await logOut();
+                return;
+            }
+
+            const { data: recipient, error: recipientError } = await supabaseClient
+                .from('users')
+                .select('*')
+                .eq('sydid', recipientId)
+                .single();
+
+            if (recipientError || !recipient) {
+                showMessage("Recipient ID not found.");
+                return;
+            }
+
+            if (sender.balance < amount) {
+                showMessage("Insufficient funds to pay user.");
+                return;
+            }
+
+            const newSenderBalance = sender.balance - amount;
+            const newRecipientBalance = recipient.balance + amount;
+
+            await supabaseClient
+                .from('businesses')
+                .update({ balance: newSenderBalance })
+                .eq('sybid', currentUserId);
+
+            await supabaseClient
+                .from('users')
+                .update({ balance: newRecipientBalance })
+                .eq('sydid', recipientId);
+
+            await supabaseClient.from('transactions').insert([
+                { type: 'payment', amount: amount, senderId: currentUserId, recipientId: recipientId, timestamp: new Date() },
+            ]);
+
+            showMessage(`Successfully paid ${amount.toFixed(2)} SYL to user ${recipientId}.`);
+            payUserSydidInput.value = '';
+            payUserAmountInput.value = '';
+        });
+
+        chargeCardNumberInput.addEventListener('blur', async () => {
+            const cardNumber = chargeCardNumberInput.value.trim();
+            if (cardNumber.length === 16) {
+                const { data: user, error } = await supabaseClient
+                    .from('users')
+                    .select('creditCard')
+                    .eq('creditCard->>cardNumber', cardNumber)
+                    .single();
+                if (user && user.creditCard) {
+                    creditScoreDisplay.classList.remove('hidden');
+                    chargeCreditScore.textContent = user.creditCard.creditScore;
+                } else {
+                    creditScoreDisplay.classList.add('hidden');
+                }
+            } else {
+                creditScoreDisplay.classList.add('hidden');
+            }
+        });
+
+        chargeBtn.addEventListener('click', async () => {
+            const cardNumber = chargeCardNumberInput.value.trim();
+            const confirmationNumber = chargeConfirmationNumberInput.value.trim();
+            const securityCode = chargeSecurityCodeInput.value.trim();
+            const productName = chargeProductNameInput.value.trim();
+            const amount = parseFloat(chargeAmountInput.value);
+
+            if (cardNumber.length !== 16 || confirmationNumber.length !== 4 || !productName || isNaN(amount) || amount <= 0) {
+                chargeError.textContent = "Please fill all fields correctly.";
+                chargeError.classList.remove('hidden');
+                return;
+            }
+
+            const { data: user, error } = await supabaseClient
+                .from('users')
+                .select('*')
+                .eq('creditCard->>cardNumber', cardNumber)
+                .single();
+
+            if (error || !user) {
+                const { data: user2, error: error2 } = await supabaseClient
+                    .from('users')
+                    .select('*')
+                    .eq('debitCard->>cardNumber', cardNumber)
+                    .single();
+                if (error2 || !user2) {
+                    chargeError.textContent = "Invalid card number.";
+                    chargeError.classList.remove('hidden');
+                    return;
+                }
+                // Debit card logic
+                if (user2.debitCard.frozen) {
+                    chargeError.textContent = "This card is frozen.";
+                    chargeError.classList.remove('hidden');
+                    return;
+                }
+                if (user2.debitCard.confirmNumber !== confirmationNumber) {
+                    chargeError.textContent = "Invalid confirmation number.";
+                    chargeError.classList.remove('hidden');
+                    return;
+                }
+                if (user2.debitCard.securityCode !== securityCode) {
+                    chargeError.textContent = "Invalid 5-digit security code.";
+                    chargeError.classList.remove('hidden');
+                    return;
+                }
+                if (user2.balance < amount) {
+                    chargeError.textContent = "Insufficient funds.";
+                    chargeError.classList.remove('hidden');
+                    return;
+                }
+                const newBalance = user2.balance - amount;
+                await supabaseClient.from('users').update({ balance: newBalance }).eq('sydid', user2.sydid);
+                showMessage(`Successfully charged ${amount.toFixed(2)} from debit card.`);
+                chargeCardNumberInput.value = '';
+                chargeConfirmationNumberInput.value = '';
+                chargeSecurityCodeInput.value = '';
+                chargeProductNameInput.value = '';
+                chargeAmountInput.value = '';
+                return;
+            }
+
+            // Credit card logic
+            if (user.creditCard.frozen) {
+                chargeError.textContent = "This card is frozen.";
+                chargeError.classList.remove('hidden');
+                return;
+            }
+            if (user.creditCard.confirmNumber !== confirmationNumber) {
+                chargeError.textContent = "Invalid confirmation number.";
+                chargeError.classList.remove('hidden');
+                return;
+            }
+
+            const newDebt = user.creditCard.debt + amount;
+            const newPurchases = [...user.creditCard.purchases, { description: productName, amount, timestamp: new Date() }];
+            const newCreditScore = user.creditCard.creditScore - Math.floor(amount / 100);
+            const newCreditCard = { ...user.creditCard, debt: newDebt, purchases: newPurchases, creditScore: newCreditScore };
+
+            await supabaseClient.from('users').update({ creditCard: newCreditCard }).eq('sydid', user.sydid);
+
+            showMessage(`Successfully charged ${amount.toFixed(2)} to credit card.`);
+            chargeCardNumberInput.value = '';
+            chargeConfirmationNumberInput.value = '';
+            chargeSecurityCodeInput.value = '';
+            chargeProductNameInput.value = '';
+            chargeAmountInput.value = '';
+        });
+
+        createStaffBtn.addEventListener('click', async () => {
+            const name = staffNameInput.value.trim();
+            const username = staffUsernameInput.value.trim();
+            const password = staffPasswordInput.value.trim();
+
+            if (!name || !username || !password) {
+                showMessage("Please fill all staff fields.");
+                return;
+            }
+
+            const { data, error } = await supabaseClient.from('staff').insert([
+                { name, username, password, business_sybid: currentUserId },
+            ]);
+
+            if (error) {
+                showMessage("Error creating staff: " + error.message);
+            } else {
+                showMessage("Staff account created successfully!");
+                staffNameInput.value = '';
+                staffUsernameInput.value = '';
+                staffPasswordInput.value = '';
+                renderStaffList(currentUserId);
+            }
+        });
+
+        // --- User Card Tab Logic ---
+        payDebtBtn.addEventListener('click', async () => {
+            payDebtError.classList.add('hidden');
+            const payAmount = parseFloat(payDebtAmountInput.value);
+            if (isNaN(payAmount) || payAmount <= 0) {
+                payDebtError.textContent = "Please enter a valid positive amount.";
+                payDebtError.classList.remove('hidden');
+                return;
+            }
+            const { data: user, error } = await supabaseClient
+                .from('users')
+                .select('*')
+                .eq('sydid', currentUserId)
+                .single();
+
+            if (error || !user || !user.creditCard) {
+                showMessage("No credit card assigned.");
+                return;
+            }
+            if (user.balance < payAmount) {
+                payDebtError.textContent = "Insufficient balance to pay debt.";
+                payDebtError.classList.remove('hidden');
+                return;
+            }
+            if (payAmount > user.creditCard.debt) {
+                payDebtError.textContent = "Payment exceeds current debt.";
+                payDebtError.classList.remove('hidden');
+                return;
+            }
+
+            const newBalance = user.balance - payAmount;
+            const newDebt = user.creditCard.debt - payAmount;
+            const newCreditScore = user.creditCard.creditScore + Math.floor(payAmount / 100);
+            const newCreditCard = { ...user.creditCard, debt: newDebt, creditScore: newCreditScore };
+
+            await supabaseClient
+                .from('users')
+                .update({ balance: newBalance, creditCard: newCreditCard })
+                .eq('sydid', currentUserId);
+
+            showMessage(`Successfully paid $${payAmount.toFixed(2)} towards credit card debt.`);
+            payDebtAmountInput.value = '';
+        });
+
+        // --- Gift Logic ---
+        sendGiftBtn.addEventListener('click', async () => {
+            const recipientGiftNumber = giftRecipientIdInput.value.trim();
+            const amount = parseFloat(giftAmountInput.value);
+            const title = giftTitleInput.value.trim();
+            const message = giftMessageInput.value.trim();
+
+            if (!recipientGiftNumber) {
+                showMessage("Please enter a recipient Gift Number.");
+                return;
+            }
+            if (isNaN(amount) || amount <= 0) {
+                showMessage("Please enter a valid positive amount.");
+                return;
+            }
+
+            const { data: sender, error: senderError } = await supabaseClient.from('users').select('balance').eq('sydid', currentUserId).single();
+            if (senderError || !sender) {
+                showMessage("Could not find your account.");
+                return;
+            }
+            if (sender.balance < amount) {
+                showMessage("Insufficient funds to send this gift.");
+                return;
+            }
+
+            let recipient;
+            const { data: userRecipient, error: userError } = await supabaseClient.from('users').select('sydid').eq('gift_number', recipientGiftNumber).single();
+            if (userRecipient) {
+                recipient = { id: userRecipient.sydid };
+            } else {
+                const { data: businessRecipient, error: businessError } = await supabaseClient.from('businesses').select('sybid').eq('gift_number', recipientGiftNumber).single();
+                if(businessError || !businessRecipient){
+                    showMessage("Recipient with that Gift Number not found.");
+                    return;
+                }
+                recipient = { id: businessRecipient.sybid };
+            }
+
+            const { error } = await supabaseClient.from('pending_gifts').insert([
+                { sender_id: currentUserId, recipient_id: recipient.id, amount, title, message },
+            ]);
+
+            if (error) {
+                showMessage("Error sending gift: " + error.message);
+            } else {
+                showMessage("Gift sent successfully! The recipient must accept it.");
+                giftRecipientIdInput.value = '';
+                giftAmountInput.value = '';
+                giftTitleInput.value = '';
+                giftMessageInput.value = '';
+            }
+        });
+
+        async function listenToPendingGifts(sydid) {
+            const { data: gifts, error } = await supabaseClient.from('pending_gifts').select('*').eq('recipient_id', sydid).eq('status', 'pending');
+            if (error) {
+                showMessage("Error fetching pending gifts.");
+                return;
+            }
+            renderPendingGifts(gifts);
+        }
+
+        function renderPendingGifts(gifts) {
+            pendingGiftsListEl.innerHTML = '';
+            if (gifts.length === 0) {
+                pendingGiftsListEl.innerHTML = '<p class="text-gray-400 text-center">No pending gifts.</p>';
+                return;
+            }
+
+            gifts.forEach(gift => {
+                const item = document.createElement('div');
+                item.className = 'p-4 border-b border-gray-700';
+                item.innerHTML = `
+                <p class="text-gray-300"><strong>From:</strong> ${gift.sender_id}</p>
+                <p class="text-gray-300"><strong>Amount:</strong> ${gift.amount.toFixed(2)} SYL</p>
+                <p class="text-gray-300"><strong>Title:</strong> ${escapeHtml(gift.title)}</p>
+                <p class="text-gray-300"><strong>Message:</strong> ${escapeHtml(gift.message)}</p>
+                <div class="mt-2 space-x-2">
+                    <button class="btn btn-primary btn-sm accept-gift-btn" data-gift-id="${gift.id}">Accept</button>
+                    <button class="btn btn-danger btn-sm reject-gift-btn" data-gift-id="${gift.id}">Reject</button>
+                </div>
+            `;
+                pendingGiftsListEl.appendChild(item);
+            });
+
+            document.querySelectorAll('.accept-gift-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const giftId = e.target.dataset.giftId;
+                    await acceptGift(giftId);
+                });
+            });
+
+            document.querySelectorAll('.reject-gift-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const giftId = e.target.dataset.giftId;
+                    await rejectGift(giftId);
+                });
+            });
+        }
+
+        async function acceptGift(giftId) {
+            const { data: gift, error: giftError } = await supabaseClient.from('pending_gifts').select('*').eq('id', giftId).single();
+            if (giftError || !gift) {
+                showMessage("Gift not found or already handled.");
+                return;
+            }
+
+            const { error: transferError } = await supabaseClient.rpc('accept_gift', { gift_id: gift.id, sender_id: gift.sender_id, recipient_id: gift.recipient_id, transfer_amount: gift.amount });
+
+            if (transferError) {
+                showMessage("Error accepting gift: " + transferError.message);
+            } else {
+                showMessage("Gift accepted!");
+            }
+        }
+
+        async function rejectGift(giftId) {
+            await supabaseClient.from('pending_gifts').update({ status: 'rejected' }).eq('id', giftId);
+            showMessage("Gift rejected.");
+        }
+
+        // --- Loan Logic ---
+        requestLoanBtn.addEventListener('click', async () => {
+            const amount = parseFloat(loanAmountInput.value);
+            const reason = loanReasonInput.value.trim();
+
+            if (isNaN(amount) || amount <= 0) {
+                showMessage("Please enter a valid loan amount.");
+                return;
+            }
+            if (!reason) {
+                showMessage("Please provide a reason for the loan.");
+                return;
+            }
+
+            const { error } = await supabaseClient.from('loans').insert([
+                { applicant_id: currentUserId, amount, reason, outstanding_debt: amount },
+            ]);
+
+            if (error) {
+                showMessage("Error submitting loan request: " + error.message);
+            } else {
+                showMessage("Loan request submitted successfully!");
+                loanAmountInput.value = '';
+                loanReasonInput.value = '';
+            }
+        });
+
+        async function listenToUserLoans(sydid) {
+            const { data: loans, error } = await supabaseClient
+                .from('loans')
+                .select('*')
+                .eq('applicant_id', sydid);
+
+            if (error) {
+                showMessage("Error fetching loans.");
+                return;
+            }
+            renderUserLoans(loans);
+        }
+
+        function renderUserLoans(loans) {
+            loanListEl.innerHTML = '';
+            if (loans.length === 0) {
+                loanListEl.innerHTML = '<p class="text-gray-400 text-center">No loans found.</p>';
+                return;
+            }
+
+            loans.forEach(loan => {
+                const item = document.createElement('div');
+                item.className = 'p-4 border-b border-gray-700';
+                let statusColor = 'text-yellow-400';
+                if (loan.status === 'approved') statusColor = 'text-green-400';
+                if (loan.status === 'rejected') statusColor = 'text-red-400';
+
+                let repaymentForm = '';
+                if (loan.status === 'approved' && loan.outstanding_debt > 0) {
+                    repaymentForm = `
+                    <div class="mt-4">
+                        <label for="repay-amount-${loan.id}" class="block font-medium text-gray-300">Repay Loan</label>
+                        <input type="number" id="repay-amount-${loan.id}" class="form-input" placeholder="0.00" min="0" step="0.01" />
+                        <button class="btn btn-primary btn-sm repay-loan-btn" data-loan-id="${loan.id}">Repay</button>
+                    </div>
+                `;
+                }
+
+                item.innerHTML = `
+                <div class="flex justify-between">
+                    <p class="text-gray-300"><strong>Amount:</strong> ${loan.amount.toFixed(2)} SYL</p>
+                    <p class="${statusColor} font-bold">${loan.status.toUpperCase()}</p>
+                </div>
+                <p class="text-gray-300"><strong>Reason:</strong> ${escapeHtml(loan.reason)}</p>
+                ${loan.status === 'approved' ? `<p class="text-gray-300"><strong>Outstanding Debt:</strong> ${loan.outstanding_debt.toFixed(2)} SYL</p>` : ''}
+                ${repaymentForm}
+            `;
+                loanListEl.appendChild(item);
+            });
+
+            document.querySelectorAll('.repay-loan-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const loanId = e.target.dataset.loanId;
+                    const repayAmount = parseFloat(document.getElementById(`repay-amount-${loanId}`).value);
+                    await repayLoan(loanId, repayAmount);
+                });
+            });
+        }
+
+        async function repayLoan(loanId, amount) {
+            if (isNaN(amount) || amount <= 0) {
+                showMessage("Please enter a valid repayment amount.");
+                return;
+            }
+
+            const { data: user, error: userError } = await supabaseClient.from('users').select('*').eq('sydid', currentUserId).single();
+            if (userError || !user) {
+                showMessage("User not found.");
+                return;
+            }
+
+            if (user.balance < amount) {
+                showMessage("Insufficient funds to make repayment.");
+                return;
+            }
+
+            const { data: loan, error: loanError } = await supabaseClient.from('loans').select('*').eq('id', loanId).single();
+            if (loanError || !loan) {
+                showMessage("Loan not found.");
+                return;
+            }
+
+            if (amount > loan.outstanding_debt) {
+                showMessage("Repayment amount cannot be greater than the outstanding debt.");
+                return;
+            }
+
+            const newUserBalance = user.balance - amount;
+            const newOutstandingDebt = loan.outstanding_debt - amount;
+
+            await supabaseClient.from('users').update({ balance: newUserBalance }).eq('sydid', currentUserId);
+            await supabaseClient.from('loans').update({ outstanding_debt: newOutstandingDebt }).eq('id', loanId);
+
+            showMessage("Repayment successful!");
+        }
+
+        async function listenToAllLoans() {
+            const { data: loans, error } = await supabaseClient.from('loans').select('*').eq('admin_hidden', false);
+            if (error) {
+                showMessage("Error fetching loan applications.");
+                return;
+            }
+            renderLoanApplications(loans);
+        }
+
+        function renderLoanApplications(loans) {
+            loanApplicationsTable.innerHTML = '';
+            if (loans.length === 0) {
+                loanApplicationsTable.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-gray-400">No loan applications found.</td></tr>';
+                return;
+            }
+
+            loans.forEach(loan => {
+                const row = document.createElement('tr');
+                row.className = 'border-b border-gray-700';
+                row.innerHTML = `
+                <td class="p-4 text-gray-300">${loan.applicant_id}</td>
+                <td class="p-4 text-gray-300">${loan.amount.toFixed(2)}</td>
+                <td class="p-4 text-gray-300">${escapeHtml(loan.reason)}</td>
+                <td class="p-4 text-gray-300">${loan.status}</td>
+                <td class="p-4 flex space-x-2">
+                    ${loan.status === 'pending' ? `
+                        <button class="btn btn-primary btn-sm approve-loan-btn" data-loan-id="${loan.id}">Approve</button>
+                        <button class="btn btn-danger btn-sm reject-loan-btn" data-loan-id="${loan.id}">Reject</button>
+                    ` : `<button class="btn btn-secondary btn-sm hide-loan-btn" data-loan-id="${loan.id}">Hide</button>`}
+                </td>
+            `;
+                loanApplicationsTable.appendChild(row);
+            });
+
+            document.querySelectorAll('.approve-loan-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const loanId = e.target.dataset.loanId;
+                    await approveLoan(loanId);
+                });
+            });
+
+            document.querySelectorAll('.reject-loan-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const loanId = e.target.dataset.loanId;
+                    await rejectLoan(loanId);
+                });
+            });
+
+            document.querySelectorAll('.hide-loan-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const loanId = e.target.dataset.loanId;
+                    await supabaseClient.from('loans').update({ admin_hidden: true }).eq('id', loanId);
+                    logEvent('Hid Loan', { loanId });
+                });
+            });
+        }
+
+        async function approveLoan(loanId) {
+            const { data: loan, error: loanError } = await supabaseClient.from('loans').select('*').eq('id', loanId).single();
+            if (loanError || !loan) {
+                showMessage("Loan not found.");
+                return;
+            }
+
+            const applicantTable = loan.applicant_id.startsWith('B') ? 'businesses' : 'users';
+            const applicantIdField = applicantTable === 'users' ? 'sydid' : 'sybid';
+
+            const { data: applicant, error: applicantError } = await supabaseClient.from(applicantTable).select('*').eq(applicantIdField, loan.applicant_id).single();
+            if (applicantError || !applicant) {
+                showMessage("Applicant not found.");
+                return;
+            }
+
+            const newBalance = applicant.balance + loan.amount;
+            await supabaseClient.from(applicantTable).update({ balance: newBalance }).eq(applicantIdField, loan.applicant_id);
+
+            await supabaseClient.from('loans').update({ status: 'approved' }).eq('id', loanId);
+            logEvent('Approved Loan', { loanId, applicant: loan.applicant_id });
+
+            showMessage("Loan approved and funds transferred.");
+        }
+
+        async function rejectLoan(loanId) {
+            await supabaseClient.from('loans').update({ status: 'rejected' }).eq('id', loanId);
+            logEvent('Rejected Loan', { loanId });
+            showMessage("Loan rejected.");
+        }
+
+        // --- Admin Dashboard Logic ---
+
+        async function logEvent(eventType, details) {
+            await supabaseClient.from('event_logs').insert({ event_type: eventType, details });
+        }
+
+        async function listenToLogs() {
+            const { data, error } = await supabaseClient.from('event_logs').select('*').order('timestamp', { ascending: false }).limit(100);
+            if (error) {
+                showMessage("Error fetching logs.");
+                return;
+            }
+            renderLogs(data);
+        }
+
+        function renderLogs(logs) {
+            logsTable.innerHTML = '';
+            if (!logs || logs.length === 0) {
+                logsTable.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-gray-400">No logs found.</td></tr>';
+                return;
+            }
+
+            logs.forEach(log => {
+                const row = document.createElement('tr');
+                row.className = 'border-b border-gray-700';
+                row.innerHTML = `
+                    <td class="p-4 text-gray-300">${new Date(log.timestamp).toLocaleString()}</td>
+                    <td class="p-4 text-gray-300">${log.event_type}</td>
+                    <td class="p-4 text-gray-300">${JSON.stringify(log.details)}</td>
+                `;
+                logsTable.appendChild(row);
+            });
+        }
+
+        async function generateUniqueGiftNumber(initials, table) {
+            let giftNumber;
+            let isUnique = false;
+            while (!isUnique) {
+                const randomDigits = Math.floor(1000 + Math.random() * 9000).toString();
+                giftNumber = `${initials}${randomDigits}`;
+                const { data, error } = await supabaseClient.rpc('check_gift_number_exists', { gift_number_to_check: giftNumber });
+                if (!data) {
+                    isUnique = true;
+                }
+            }
+            return giftNumber;
+        }
+
+        async function createUser(name) {
+            if (!name) {
+                showMessage("Please enter a user name.");
+                return;
+            }
+
+            const initials = name.split(' ').map(n => n[0]).join('').toUpperCase();
+            const giftNumber = await generateUniqueGiftNumber(initials, 'users');
+
+            let newSydid;
+            let existingUser = true;
+            do {
+                newSydid = Math.floor(100000000 + Math.random() * 900000000).toString();
+                const { data } = await supabaseClient.rpc('check_sydid_exists', { sydid_to_check: newSydid });
+                existingUser = data;
+            } while (existingUser);
+
+            const newPassword = Math.floor(100000 + Math.random() * 900000).toString();
+            const newKeyword = Math.floor(1000 + Math.random() * 9000).toString();
+
+            const { error } = await supabaseClient.from('users').insert([
+                { name, sydid: newSydid, gift_number: giftNumber, balance: 0, isAdmin: false, password: newPassword, keyword: newKeyword, creditCard: null, debitCard: null, savings: '[]', notification_settings: { lowBalance: false, highDebt: false, largeTransaction: false, paymentReminder: false }, notifications: '[]', goals: { monthlySpending: null } },
+            ]);
+
+            if (error) {
+                showMessage("Error creating user: " + error.message);
+            } else {
+                newUserInput.value = '';
+                showCredentialsModal(newSydid, giftNumber, newPassword, newKeyword);
+                logEvent('Created User', { name, sydid: newSydid });
+            }
+        }
+
+        createUserBtn.addEventListener('click', () => createUser(newUserInput.value));
+
+        createBusinessBtn.addEventListener('click', async () => {
+            const name = newBusinessNameInput.value.trim();
+            if (!name) {
+                showMessage("Please enter a business name.");
+                return;
+            }
+
+            const initials = name.split(' ').map(n => n[0]).join('').toUpperCase();
+            const giftNumber = await generateUniqueGiftNumber(initials, 'businesses');
+
+            let newSybid;
+            let existingBusiness = true;
+            do {
+                newSybid = 'B' + Math.floor(10000000 + Math.random() * 90000000).toString();
+                const { data } = await supabaseClient.rpc('check_sybid_exists', { sybid_to_check: newSybid });
+                existingBusiness = data;
+            } while (existingBusiness);
+
+            const newPassword = Math.floor(10000000 + Math.random() * 90000000).toString();
+            const newKeyword = Math.floor(1000 + Math.random() * 9000).toString();
+
+            const { error } = await supabaseClient.from('businesses').insert([
+                { name, sybid: newSybid, gift_number: giftNumber, balance: 0, password: newPassword, keyword: newKeyword, savings: '[]', inventory: '[]' },
+            ]);
+
+            if (error) {
+                showMessage("Error creating business: " + error.message);
+            } else {
+                newBusinessNameInput.value = '';
+                showBusinessCredentialsModal(newSybid, giftNumber, newPassword, newKeyword);
+                logEvent('Created Business', { name, sybid: newSybid });
+            }
+        });
+
+        createCardBtn.addEventListener('click', async () => {
+            const sydid = cardUserSydidInput.value.trim();
+            const cardType = cardTypeInput.value;
+
+            if (!sydid) {
+                showMessage("Please enter a user SYDID.");
+                return;
+            }
+
+            const { data: user, error } = await supabaseClient.from('users').select('*').eq('sydid', sydid).single();
+
+            if (error || !user) {
+                showMessage("User not found.");
+                return;
+            }
+
+            const newCardNumber = await generateCardNumber();
+            const newConfirmNumber = generateConfirmNumber();
+
+            if (cardType === 'credit') {
+                const newCreditCard = {
+                    cardNumber: newCardNumber,
+                    confirmNumber: newConfirmNumber,
+                    debt: 0,
+                    purchases: [],
+                    frozen: false,
+                    freezePin: null,
+                    creditScore: 500
+                };
+                await supabaseClient.from('users').update({ creditCard: newCreditCard }).eq('sydid', sydid);
+                showMessage("Credit card created successfully.");
+                logEvent('Created Credit Card', { sydid });
+            } else {
+                const newDebitCard = {
+                    cardNumber: newCardNumber,
+                    confirmNumber: newConfirmNumber,
+                    securityCode: generateSecurityCode(),
+                    frozen: false,
+                    freezePin: null
+                };
+                await supabaseClient.from('users').update({ debitCard: newDebitCard }).eq('sydid', sydid);
+                showMessage("Debit card created successfully.");
+                logEvent('Created Debit Card', { sydid });
+            }
+
+            cardUserSydidInput.value = '';
+        });
+
+        exportDownloadBtn.addEventListener('click', async () => {
+            const { data: users, error } = await supabaseClient.from('users').select('*');
+            if (error) {
+                showMessage("Error exporting data: " + error.message);
+                return;
+            }
+            const jsonStr = JSON.stringify(users, null, 2);
+            const blob = new Blob([jsonStr], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `sylbank_users_${new Date().toISOString().slice(0,10)}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+
+        importFileBtn.addEventListener('click', () => {
+            const file = importJsonFileInput.files[0];
+            if (!file) {
+                showMessage("Please select a JSON file to import.");
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    const jsonData = JSON.parse(e.target.result);
+                    if (!Array.isArray(jsonData)) throw new Error("Invalid JSON format: Expected array.");
+
+                    const { error } = await supabaseClient.from('users').upsert(jsonData, { onConflict: 'sydid' });
+
+                    if (error) {
+                        throw new Error(error.message);
+                    }
+
+                    showMessage("Data imported successfully!");
+                } catch (err) {
+                    showMessage("Error importing data: " + err.message);
+                }
+            };
+            reader.readAsText(file);
+        });
+
+        async function listenToAllUsers() {
+            const { data: users, error } = await supabaseClient.from('users').select('*');
+            if (error) {
+                showMessage("Error fetching users.");
+                return;
+            }
+            allUsersData = users;
+            renderUserList(allUsersData);
+        }
+
+        async function listenToAllBusinesses() {
+            const { data: businesses, error } = await supabaseClient.from('businesses').select('*');
+            if (error) {
+                showMessage("Error fetching businesses.");
+                return;
+            }
+            allBusinessesData = businesses;
+            renderBusinessList(allBusinessesData);
+        }
+
+        async function listenToAccountRequests() {
+            const { data, error } = await supabaseClient.from('account_requests').select('*').eq('admin_hidden', false);
+            if (error) {
+                showMessage("Error fetching account requests.");
+                return;
+            }
+            renderAccountRequests(data);
+        }
+
+        function renderAccountRequests(requests) {
+            accountRequestsTable.innerHTML = '';
+            if (requests.length === 0) {
+                accountRequestsTable.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-gray-400">No account requests found.</td></tr>';
+                return;
+            }
+
+            requests.forEach(request => {
+                const row = document.createElement('tr');
+                row.className = 'border-b border-gray-700';
+                row.innerHTML = `
+                    <td class="p-4 text-gray-300">${request.full_name}</td>
+                    <td class="p-4 text-gray-300">${request.status}</td>
+                    <td class="p-4 flex space-x-2">
+                        ${request.status === 'pending' ? `
+                            <button class="btn btn-primary btn-sm approve-request-btn" data-id="${request.id}">Approve</button>
+                            <button class="btn btn-danger btn-sm reject-request-btn" data-id="${request.id}">Reject</button>
+                        ` : `<button class="btn btn-secondary btn-sm hide-request-btn" data-id="${request.id}">Hide</button>`}
+                    </td>
+                `;
+                accountRequestsTable.appendChild(row);
+            });
+
+            document.querySelectorAll('.approve-request-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const requestId = e.target.dataset.id;
+                    const { data: request, error } = await supabaseClient.from('account_requests').select('full_name').eq('id', requestId).single();
+                    if (error || !request) {
+                        showMessage("Request not found.");
+                        return;
+                    }
+                    await createUser(request.full_name);
+                    await supabaseClient.from('account_requests').update({ status: 'approved' }).eq('id', requestId);
+                    logEvent('Approved Account Request', { requestId, name: request.full_name });
+                });
+            });
+
+            document.querySelectorAll('.reject-request-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const requestId = e.target.dataset.id;
+                    await supabaseClient.from('account_requests').update({ status: 'rejected' }).eq('id', requestId);
+                    logEvent('Rejected Account Request', { requestId });
+                });
+            });
+
+            document.querySelectorAll('.hide-request-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const requestId = e.target.dataset.id;
+                    await supabaseClient.from('account_requests').update({ admin_hidden: true }).eq('id', requestId);
+                    logEvent('Hid Account Request', { requestId });
+                });
+            });
+        }
+
+        let allUsersData = [];
+        let allBusinessesData = [];
+
+        userSearchInput.addEventListener('keyup', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const filteredUsers = allUsersData.filter(user => {
+                return user.name.toLowerCase().includes(searchTerm) || user.sydid.includes(searchTerm);
+            });
+            renderUserList(filteredUsers);
+        });
+
+        businessSearchInput.addEventListener('keyup', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const filteredBusinesses = allBusinessesData.filter(business => {
+                return business.name.toLowerCase().includes(searchTerm) || business.sybid.includes(searchTerm);
+            });
+            renderBusinessList(filteredBusinesses);
+        });
+
+        function renderUserList(users) {
+            userListTable.innerHTML = '';
+            const filteredUsers = users.filter(user => !user.isAdmin);
+
+            if (filteredUsers.length === 0) {
+                userListTable.innerHTML = '<tr><td colspan="7" class="p-4 text-center text-gray-400">No users found.</td></tr>';
+                return;
+            }
+            filteredUsers.forEach(user => {
+                const row = document.createElement('tr');
+                row.className = 'border-b border-gray-700 hover:bg-gray-800';
+                row.innerHTML = `
+                <td class="p-4 text-gray-300">${user.name}</td>
+                <td class="p-4 text-gray-300">${user.sydid}</td>
+                <td class="p-4 text-gray-300">${user.gift_number}</td>
+                <td class="p-4 text-gray-300">${user.password}</td>
+                <td class="p-4 text-gray-300">${user.keyword}</td>
+                <td class="p-4 text-gray-300">${user.balance.toFixed(2)}</td>
+                <td class="p-4 flex space-x-2">
+                    <button class="btn btn-primary btn-sm add-money-btn" data-sydid="${user.sydid}" data-name="${user.name}">Add</button>
+                    <button class="btn btn-danger btn-sm delete-user-btn" data-sydid="${user.sydid}">Delete</button>
+                    <button class="btn btn-secondary btn-sm show-on-monitor-btn" data-sydid="${user.sydid}">Show on Monitor</button>
+                </td>
+            `;
+                userListTable.appendChild(row);
+            });
+
+            document.querySelectorAll('.add-money-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    selectedUserIdForAddMoney = e.target.dataset.sydid;
+                    const userName = e.target.dataset.name;
+                    addMoneyUserNameEl.textContent = `Adding money to ${userName}'s account:`;
+                    addMoneyModal.style.display = 'flex';
+                });
+            });
+
+            document.querySelectorAll('.delete-user-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const userSydidToDelete = e.target.dataset.sydid;
+                    const userConfirmed = await showConfirmation("Are you sure you want to delete this user? This action cannot be undone.");
+                    if (userConfirmed) {
+                        const { error } = await supabaseClient.from('users').delete().eq('sydid', userSydidToDelete);
+                        if (error) {
+                            showMessage("Error deleting user: " + error.message);
+                            return;
+                        }
+                        showMessage(`User ${userSydidToDelete} deleted successfully.`);
+                    }
+                });
+            });
+
+            document.querySelectorAll('.show-on-monitor-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const sydid = e.target.dataset.sydid;
+                    const user = allUsersData.find(u => u.sydid === sydid);
+                    if (user) {
+                        const customerData = {
+                            name: user.name,
+                            balance: user.balance
+                        };
+                        localStorage.setItem('customer_view_data', JSON.stringify(customerData));
+                        showMessage(`Displaying ${user.name}'s info on the customer monitor.`);
+                    }
+                });
+            });
+        }
+
+        function renderBusinessList(businesses) {
+            businessListTable.innerHTML = '';
+
+            if (businesses.length === 0) {
+                businessListTable.innerHTML = '<tr><td colspan="7" class="p-4 text-center text-gray-400">No businesses found.</td></tr>';
+                return;
+            }
+            businesses.forEach(business => {
+                const row = document.createElement('tr');
+                row.className = 'border-b border-gray-700 hover:bg-gray-800';
+                row.innerHTML = `
+                <td class="p-4 text-gray-300">${business.name}</td>
+                <td class="p-4 text-gray-300">${business.sybid}</td>
+                <td class="p-4 text-gray-300">${business.gift_number}</td>
+                <td class="p-4 text-gray-300">${business.password}</td>
+                <td class="p-4 text-gray-300">${business.keyword}</td>
+                <td class="p-4 text-gray-300">${business.balance.toFixed(2)}</td>
+                <td class="p-4 flex space-x-2">
+                    <button class="btn btn-danger btn-sm delete-business-btn" data-sybid="${business.sybid}">Delete</button>
+                </td>
+            `;
+                businessListTable.appendChild(row);
+            });
+
+            document.querySelectorAll('.delete-business-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const businessSybidToDelete = e.target.dataset.sybid;
+                    const userConfirmed = await showConfirmation("Are you sure you want to delete this business? This action cannot be undone.");
+                    if (userConfirmed) {
+                        const { error } = await supabaseClient.from('businesses').delete().eq('sybid', businessSybidToDelete);
+                        if (error) {
+                            showMessage("Error deleting business: " + error.message);
+                            return;
+                        }
+                        showMessage(`Business ${businessSybidToDelete} deleted successfully.`);
+                    }
+                });
+            });
+        }
+
+        addMoneyConfirmBtn.addEventListener('click', async () => {
+            const amount = parseFloat(addMoneyAmountInput.value);
+            if (isNaN(amount) || amount <= 0) {
+                showMessage("Invalid amount.");
+                return;
+            }
+
+            const { data: user, error } = await supabaseClient
+                .from('users')
+                .select('balance')
+                .eq('sydid', selectedUserIdForAddMoney)
+                .single();
+
+            if (error || !user) {
+                showMessage("User not found!");
+                addMoneyModal.style.display = 'none';
+                return;
+            }
+            const newBalance = user.balance + amount;
+            await supabaseClient
+                .from('users')
+                .update({ balance: newBalance })
+                .eq('sydid', selectedUserIdForAddMoney);
+
+            showMessage(`Successfully added ${amount.toFixed(2)} SYL.`);
+            addMoneyModal.style.display = 'none';
+            addMoneyAmountInput.value = '';
+        });
+
+        addMoneyCancelBtn.addEventListener('click', () => {
+            addMoneyModal.style.display = 'none';
+            addMoneyAmountInput.value = '';
+        });
+
+        // --- Card Feature ---
+
+        // Helper: Generate unique 16-digit card number
+        async function generateCardNumber() {
+            function random16Digits() {
+                let num = '';
+                for (let i = 0; i < 16; i++) {
+                    num += Math.floor(Math.random() * 10);
+                }
+                return num;
+            }
+            let cardNum;
+            let existingCard = null;
+            do {
+                cardNum = random16Digits();
+                const { data } = await supabaseClient.from('users').select('creditCard,debitCard').or(`creditCard->>cardNumber.eq.${cardNum},debitCard->>cardNumber.eq.${cardNum}`).single();
+                existingCard = data;
+            } while (existingCard);
+            return cardNum;
+        }
+
+        // Generate 4-digit confirmation code (CVV)
+        function generateConfirmNumber() {
+            return Math.floor(1000 + Math.random() * 9000).toString();
+        }
+
+        // Generate 5-digit security code
+        function generateSecurityCode() {
+            return Math.floor(10000 + Math.random() * 90000).toString();
+        }
+
+        // Admin: Populate the Card Management user list
+        async function populateCardUserList() {
+            const { data: users, error } = await supabaseClient.rpc('get_users_with_cards');
+            if (error) {
+                showMessage("Error fetching card users.");
+                console.error('Error fetching card users:', error);
+                return;
+            }
+            renderCardUserList(users);
+        }
+
+        function renderCardUserList(users) {
+            cardUserListTable.innerHTML = '';
+
+            if (!users || users.length === 0) {
+                cardUserListTable.innerHTML = '<tr><td colspan="7" class="p-4 text-center text-gray-400">No users with cards found.</td></tr>';
+                return;
+            }
+
+            users.forEach(user => {
+                const card = user.creditCard || user.debitCard;
+                if (!card) return;
+
+                const maskedCardNum = maskCardNumber(card.cardNumber);
+                const cardType = user.creditCard ? 'Credit' : 'Debit';
+                const debt = user.creditCard ? `$${user.creditCard.debt.toFixed(2)}` : 'N/A';
+                const creditScore = user.creditCard ? user.creditCard.creditScore : 'N/A';
+                const row = document.createElement('tr');
+                row.className = 'border-b border-gray-700 hover:bg-gray-800';
+                row.innerHTML = `
+                <td class="p-4 text-gray-300">${user.name}</td>
+                <td class="p-4 text-gray-300">${user.sydid}</td>
+                <td class="p-4 text-gray-300">${maskedCardNum}</td>
+                <td class="p-4 text-gray-300">${cardType}</td>
+                <td class="p-4 text-gray-300">${debt}</td>
+                <td class="p-4 text-gray-300">${creditScore}</td>
+                <td class="p-4">
+                    <button class="btn btn-primary btn-sm view-card-btn" data-sydid="${user.sydid}">View Card</button>
+                </td>
+            `;
+                cardUserListTable.appendChild(row);
+            });
+
+            document.querySelectorAll('.view-card-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const sydid = btn.dataset.sydid;
+                    openCardAdminModal(sydid);
+                });
+            });
+        }
+
+        // Masked card number (show first 4 and last 4 digits)
+        function maskCardNumber(number) {
+            return number.slice(0, 4) + ' **** **** ' + number.slice(-4);
+        }
+
+        // Open admin modal to view/edit credit card of a user
+        let currentCardAdminSydid = null;
+        async function openCardAdminModal(sydid) {
+            const { data: user, error } = await supabaseClient.from('users').select('*').eq('sydid', sydid).single();
+            if (error || !user) {
+                showMessage("User not found.");
+                return;
+            }
+            currentCardAdminSydid = sydid;
+
+            renderCardAdminInfo(user.creditCard || user.debitCard);
+            purchaseDescInput.value = '';
+            purchaseAmountInput.value = '';
+            cardAdminModal.style.display = 'flex';
+        }
+
+        // Render card admin info + purchases (masked card number, CVV hidden)
+        function renderCardAdminInfo(card) {
+            if (!card) {
+                cardAdminInfo.innerHTML = "<p>No card assigned.</p>";
+                return;
+            }
+            const maskedCardNum = maskCardNumber(card.cardNumber);
+            const cvvMasked = '***';
+            const cardType = card.debt !== undefined ? 'Credit' : 'Debit';
+            const debt = card.debt !== undefined ? `$${card.debt.toFixed(2)}` : 'N/A';
+            const creditScore = card.creditScore ? card.creditScore : 'N/A';
+
+            let purchasesHtml = '';
+            if (card.purchases && card.purchases.length > 0) {
+                purchasesHtml = '<ul class="list-disc pl-5 max-h-48 overflow-y-auto">';
+                card.purchases.forEach((p) => {
+                    purchasesHtml += `<li><strong>${escapeHtml(p.description)}</strong>: $${p.amount.toFixed(2)}</li>`;
+                });
+                purchasesHtml += '</ul>';
+            } else {
+                purchasesHtml = "<p>No purchases recorded.</p>";
+            }
+
+            cardAdminInfo.innerHTML = `
+            <p><strong>Card Number:</strong> ${maskedCardNum}</p>
+            <p><strong>CVV:</strong> ${cvvMasked}</p>
+            <p><strong>Card Type:</strong> ${cardType}</p>
+            <p><strong>Current Debt:</strong> ${debt}</p>
+            <p><strong>Credit Score:</strong> ${creditScore}</p>
+            <h4 class="mt-4 font-semibold">Purchases:</h4>
+            ${purchasesHtml}
+        `;
+        }
+
+        // Escape HTML for safety
+        function escapeHtml(text) {
+            return text.replace(/[&<>"']/g, function(m) {
+                return ({
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#39;'
+                })[m];
+            });
+        }
+
+        addPurchaseBtn.addEventListener('click', async () => {
+            if (!currentCardAdminSydid) return;
+            const desc = purchaseDescInput.value.trim();
+            const amount = parseFloat(purchaseAmountInput.value);
+            if (!desc) {
+                showMessage("Please enter a purchase description.");
+                return;
+            }
+            if (isNaN(amount) || amount <= 0) {
+                showMessage("Please enter a valid positive amount.");
+                return;
+            }
+
+            const { data: user, error } = await supabaseClient.from('users').select('*').eq('sydid', currentCardAdminSydid).single();
+            if (error || !user || !user.creditCard) {
+                showMessage("User or credit card not found.");
+                return;
+            }
+
+            const newPurchases = [...user.creditCard.purchases, { description: desc, amount, timestamp: new Date() }];
+            const newDebt = user.creditCard.debt + amount;
+            const newCreditScore = user.creditCard.creditScore - Math.floor(amount / 100);
+            const newCreditCard = { ...user.creditCard, purchases: newPurchases, debt: newDebt, creditScore: newCreditScore };
+
+            await supabaseClient.from('users').update({ creditCard: newCreditCard }).eq('sydid', currentCardAdminSydid);
+
+            renderCardAdminInfo(newCreditCard);
+
+            purchaseDescInput.value = '';
+            purchaseAmountInput.value = '';
+        });
+
+        closeCardAdminBtn.addEventListener('click', () => {
+            cardAdminModal.style.display = 'none';
+            currentCardAdminSydid = null;
+        });
+
+        // --- User Card Tab Rendering ---
+        async function renderUserCardTab() {
+            if (!currentUserId) return;
+            const { data: user, error } = await supabaseClient.from('users').select('creditCard').eq('sydid', currentUserId).single();
+            if (error || !user || !user.creditCard) {
+                userCardInfo.innerHTML = `<p class="text-gray-400">No credit card assigned to your account.</p>`;
+                return;
+            }
+            const card = user.creditCard;
+            const cardNum = card.cardNumber.match(/.{1,4}/g).join(' ');
+            const cvv = card.confirmNumber;
+            let purchasesHtml = '';
+            if (card.purchases.length === 0) {
+                purchasesHtml = "<p class='text-gray-400'>No purchases recorded.</p>";
+            } else {
+                purchasesHtml = '<ul class="list-disc pl-5 max-h-48 overflow-y-auto">';
+                card.purchases.forEach(p => {
+                    purchasesHtml += `<li class="text-gray-300"><strong>${escapeHtml(p.description)}</strong>: $${p.amount.toFixed(2)}</li>`;
+                });
+                purchasesHtml += '</ul>';
+            }
+            userCardInfo.innerHTML = `
+            <p class="text-gray-300"><strong>Card Number:</strong> ${cardNum}</p>
+            <p class="text-gray-300"><strong>CVV:</strong> ${cvv}</p>
+            <p class="text-gray-300"><strong>Current Debt:</strong> $${card.debt.toFixed(2)}</p>
+            <p class="text-gray-300"><strong>Status:</strong> ${card.frozen ? 'Frozen' : 'Active'}</p>
+            <div class="mt-4">
+                <button class="btn btn-secondary freeze-credit-btn">${card.frozen ? 'Unfreeze' : 'Freeze'} Card</button>
+            </div>
+            <h4 class="mt-4 font-semibold text-white">Purchases:</h4>
+            ${purchasesHtml}
+        `;
+
+            document.querySelector('.freeze-credit-btn').addEventListener('click', () => toggleCardFreeze('credit'));
+        }
+
+        async function renderUserDebitCardTab() {
+            if (!currentUserId) return;
+            const { data: user, error } = await supabaseClient.from('users').select('debitCard').eq('sydid', currentUserId).single();
+            if (error || !user || !user.debitCard) {
+                userDebitCardInfo.innerHTML = `<p class="text-gray-400">No debit card assigned to your account.</p>`;
+                return;
+            }
+            const card = user.debitCard;
+            const cardNum = card.cardNumber.match(/.{1,4}/g).join(' ');
+            const cvv = card.confirmNumber;
+            const securityCode = card.securityCode;
+            userDebitCardInfo.innerHTML = `
+            <p class="text-gray-300"><strong>Card Number:</strong> ${cardNum}</p>
+            <p class="text-gray-300"><strong>CVV:</strong> ${cvv}</p>
+            <p class="text-gray-300"><strong>5-Digit Security Code:</strong> ${securityCode}</p>
+            <p class="text-gray-300"><strong>Status:</strong> ${card.frozen ? 'Frozen' : 'Active'}</p>
+            <div class="mt-4">
+                <button class="btn btn-secondary freeze-debit-btn">${card.frozen ? 'Unfreeze' : 'Freeze'} Card</button>
+            </div>
+        `;
+
+            document.querySelector('.freeze-debit-btn').addEventListener('click', () => toggleCardFreeze('debit'));
+        }
+
+        async function renderCreditScoreTab() {
+            if (!currentUserId) return;
+            const { data: user, error } = await supabaseClient.from('users').select('creditCard').eq('sydid', currentUserId).single();
+            if (error || !user || !user.creditCard) {
+                creditScoreContainer.innerHTML = `<p class="text-gray-400">No credit card assigned to your account.</p>`;
+                return;
+            }
+            const score = user.creditCard.creditScore;
+            const scorePercentage = (score / 1000) * 100;
+            let color = 'bg-red-500';
+            if (score > 500) color = 'bg-orange-500';
+            if (score > 700) color = 'bg-green-500';
+            if (score > 850) color = 'bg-blue-500';
+
+            creditScoreContainer.innerHTML = `
+                <div class="credit-score-graph">
+                    <div class="bg-red-500" style="width: 50%"></div>
+                    <div class="bg-orange-500" style="width: 20%"></div>
+                    <div class="bg-green-500" style="width: 15%"></div>
+                    <div class="bg-blue-500" style="width: 15%"></div>
+                </div>
+                <div class="credit-score-arrow" style="margin-left: ${scorePercentage}%"></div>
+                <p class="text-center text-2xl font-bold mt-2 text-white">${score}</p>
+            `;
+        }
+
+        async function renderSavingsTab() {
+            if (!currentUserId) return;
+            const { data, error } = await supabaseClient.from(currentUserType === 'user' ? 'users' : 'businesses').select('savings').eq(currentUserType === 'user' ? 'sydid' : 'sybid', currentUserId).single();
+            if (error || !data) {
+                showMessage("Could not fetch savings data.");
+                return;
+            }
+
+            const vaults = data.savings || [];
+            savingsVaultsContainer.innerHTML = '';
+            if (vaults.length === 0) {
+                savingsVaultsContainer.innerHTML = '<p class="text-gray-400 text-center">No savings vaults yet.</p>';
+                return;
+            }
+
+            vaults.forEach((vault, index) => {
+                const item = document.createElement('div');
+                item.className = 'p-4 border-b border-gray-700';
+                item.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <p class="text-gray-300"><strong>${escapeHtml(vault.title)}:</strong> ${vault.balance.toFixed(2)} SYL</p>
+                        <div>
+                            <input type="number" class="form-input w-32 mr-2" placeholder="Amount" id="vault-amount-${index}" />
+                            <button class="btn btn-primary btn-sm deposit-vault-btn" data-index="${index}">Deposit</button>
+                            <button class="btn btn-secondary btn-sm withdraw-vault-btn" data-index="${index}">Withdraw</button>
+                        </div>
+                    </div>
+                `;
+                savingsVaultsContainer.appendChild(item);
+            });
+
+            document.querySelectorAll('.deposit-vault-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const index = e.target.dataset.index;
+                    const amount = parseFloat(document.getElementById(`vault-amount-${index}`).value);
+                    await handleVaultTransaction(index, amount, 'deposit');
+                });
+            });
+
+            document.querySelectorAll('.withdraw-vault-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const index = e.target.dataset.index;
+                    const amount = parseFloat(document.getElementById(`vault-amount-${index}`).value);
+                    await handleVaultTransaction(index, amount, 'withdraw');
+                });
+            });
+        }
+
+        createVaultBtn.addEventListener('click', async () => {
+            const title = newVaultTitleInput.value.trim();
+            if (!title) {
+                showMessage("Please enter a title for your new vault.");
+                return;
+            }
+
+            const { data, error } = await supabaseClient.from(currentUserType === 'user' ? 'users' : 'businesses').select('savings').eq(currentUserType === 'user' ? 'sydid' : 'sybid', currentUserId).single();
+            if (error || !data) {
+                showMessage("Could not fetch user data.");
+                return;
+            }
+
+            const newVaults = [...(data.savings || []), { title, balance: 0 }];
+            await supabaseClient.from(currentUserType === 'user' ? 'users' : 'businesses').update({ savings: newVaults }).eq(currentUserType === 'user' ? 'sydid' : 'sybid', currentUserId);
+            newVaultTitleInput.value = '';
+        });
+
+        async function handleVaultTransaction(index, amount, type) {
+            if (isNaN(amount) || amount <= 0) {
+                showMessage("Please enter a valid amount.");
+                return;
+            }
+
+            const { data, error } = await supabaseClient.from(currentUserType === 'user' ? 'users' : 'businesses').select('balance, savings').eq(currentUserType === 'user' ? 'sydid' : 'sybid', currentUserId).single();
+            if (error || !data) {
+                showMessage("Could not fetch user data.");
+                return;
+            }
+
+            const vaults = data.savings || [];
+            const vault = vaults[index];
+
+            if (type === 'deposit') {
+                if (data.balance < amount) {
+                    showMessage("Insufficient balance.");
+                    return;
+                }
+                const newBalance = data.balance - amount;
+                vault.balance += amount;
+                await supabaseClient.from(currentUserType === 'user' ? 'users' : 'businesses').update({ balance: newBalance, savings: vaults }).eq(currentUserType === 'user' ? 'sydid' : 'sybid', currentUserId);
+            } else if (type === 'withdraw') {
+                if (vault.balance < amount) {
+                    showMessage("Insufficient vault balance.");
+                    return;
+                }
+                const newBalance = data.balance + amount;
+                vault.balance -= amount;
+                await supabaseClient.from(currentUserType === 'user' ? 'users' : 'businesses').update({ balance: newBalance, savings: vaults }).eq(currentUserType === 'user' ? 'sydid' : 'sybid', currentUserId);
+            }
+        }
+
+        async function toggleCardFreeze(cardType) {
+            const { data: user, error } = await supabaseClient.from('users').select('creditCard, debitCard').eq('sydid', currentUserId).single();
+            if (error || !user) {
+                showMessage("User not found.");
+                return;
+            }
+
+            const card = cardType === 'credit' ? user.creditCard : user.debitCard;
+
+            if (card.frozen) {
+                // Unfreeze
+                const pin = await showPinModal('Enter 5-Digit PIN to Unfreeze', card, 'unfreeze');
+                if (pin && pin === card.freezePin) {
+                    card.frozen = false;
+                    await supabaseClient.from('users').update({ [cardType === 'credit' ? 'creditCard' : 'debitCard']: card }).eq('sydid', currentUserId);
+                    showMessage("Card unfrozen successfully.");
+                } else if (pin) {
+                    showMessage("Incorrect PIN.");
+                }
+            } else {
+                // Freeze
+                let pin = card.freezePin;
+                if (!pin) {
+                    pin = await showPinModal('Set a 5-Digit PIN to Freeze', card, 'set-pin');
+                    if (pin && pin.length === 5 && /^[0-9]+$/.test(pin)) {
+                        card.freezePin = pin;
+                    } else if (pin) {
+                        showMessage("Invalid PIN. Must be 5 digits.");
+                        return;
+                    } else {
+                        return; // User cancelled
+                    }
+                }
+                const enteredPin = await showPinModal('Enter 5-Digit PIN to Freeze', card, 'freeze');
+                if (enteredPin && enteredPin === card.freezePin) {
+                    card.frozen = true;
+                    await supabaseClient.from('users').update({ [cardType === 'credit' ? 'creditCard' : 'debitCard']: card }).eq('sydid', currentUserId);
+                    showMessage("Card frozen successfully.");
+                } else if (enteredPin) {
+                    showMessage("Incorrect PIN.");
+                }
+            }
+        }
+
+        donateBtn.addEventListener('click', async () => {
+            const amount = parseFloat(donationAmountInput.value);
+            const reason = donationReasonInput.value.trim();
+
+            if (isNaN(amount) || amount <= 0) {
+                showMessage("Please enter a valid amount to donate.");
+                return;
+            }
+
+            const { data: user, error } = await supabaseClient.from('users').select('balance, name').eq('sydid', currentUserId).single();
+            if (error || !user) {
+                showMessage("Could not fetch your data.");
+                return;
+            }
+
+            if (user.balance < amount) {
+                showMessage("Insufficient funds to make this donation.");
+                return;
+            }
+
+            const newBalance = user.balance - amount;
+            await supabaseClient.from('users').update({ balance: newBalance }).eq('sydid', currentUserId);
+
+            // In a real app, you would credit the admin/government account.
+            // For now, we'll just log it as a transaction.
+            await supabaseClient.from('transactions').insert([
+                { type: 'donation', amount, senderId: currentUserId, recipientId: 'admin', details: { reason, donatorName: user.name } },
+            ]);
+
+            showMessage("Thank you for your generous donation!");
+            donationAmountInput.value = '';
+            donationReasonInput.value = '';
+        });
+
+        // --- Tab Switching ---
+        if (userTabs) {
+            userTabs.addEventListener('click', (e) => {
+                if (!e.target.classList.contains('tab')) return;
+                const selectedTab = e.target.dataset.tab;
+                // Remove active from all
+                userTabs.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                e.target.classList.add('active');
+
+                // Show/hide tabs
+                dashboardTab.classList.add('hidden');
+                cardsLoansTab.classList.add('hidden');
+                creditScoreTab.classList.add('hidden');
+                savingsTab.classList.add('hidden');
+                donateTab.classList.add('hidden');
+                notificationsTab.classList.add('hidden');
+                goalsTab.classList.add('hidden');
+
+                if (selectedTab === 'dashboard-tab') {
+                    dashboardTab.classList.remove('hidden');
+                } else if (selectedTab === 'cards-loans-tab') {
+                    cardsLoansTab.classList.remove('hidden');
+                } else if (selectedTab === 'credit-score-tab') {
+                    creditScoreTab.classList.remove('hidden');
+                } else if (selectedTab === 'savings-tab') {
+                    savingsTab.classList.remove('hidden');
+                } else if (selectedTab === 'donate-tab') {
+                    donateTab.classList.remove('hidden');
+                } else if (selectedTab === 'notifications-tab') {
+                    notificationsTab.classList.remove('hidden');
+                } else if (selectedTab === 'goals-tab') {
+                    goalsTab.classList.remove('hidden');
+                }
+            });
+        }
+
+        if (businessTabs) {
+            businessTabs.addEventListener('click', (e) => {
+                if (!e.target.classList.contains('tab')) return;
+                const selectedTab = e.target.dataset.tab;
+                // Remove active from all
+                businessTabs.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                e.target.classList.add('active');
+
+                // Show/hide tabs
+                businessDashboardTab.classList.add('hidden');
+                inventoryTab.classList.add('hidden');
+                staffTab.classList.add('hidden');
+
+                if (selectedTab === 'business-dashboard-tab') {
+                    businessDashboardTab.classList.remove('hidden');
+                } else if (selectedTab === 'inventory-tab') {
+                    inventoryTab.classList.remove('hidden');
+                } else if (selectedTab === 'staff-tab') {
+                    staffTab.classList.remove('hidden');
+                }
+            });
+        }
+
+        // --- Admin Section Tab Switching ---
+        if (adminSectionTabs) {
+            adminSectionTabs.addEventListener('click', (e) => {
+                if (!e.target.classList.contains('tab')) return;
+                const selectedTab = e.target.dataset.adminTab;
+
+                // Remove active from all tabs
+                adminSectionTabs.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                e.target.classList.add('active');
+
+                // Hide all tab contents
+                adminUserManagement.classList.add('hidden');
+                adminBusinessManagement.classList.add('hidden');
+                adminFinancialManagement.classList.add('hidden');
+                newsManagementTab.classList.add('hidden');
+                adminLogsTab.classList.add('hidden');
+                adminImportExport.classList.add('hidden');
+
+                // Show selected tab content
+                if (selectedTab === 'user-management') {
+                    adminUserManagement.classList.remove('hidden');
+                } else if (selectedTab === 'business-management') {
+                    adminBusinessManagement.classList.remove('hidden');
+                } else if (selectedTab === 'financial-management') {
+                    adminFinancialManagement.classList.remove('hidden');
+                } else if (selectedTab === 'news-management') {
+                    newsManagementTab.classList.remove('hidden');
+                } else if (selectedTab === 'logs-tab') {
+                    adminLogsTab.classList.remove('hidden');
+                } else if (selectedTab === 'import-export') {
+                    adminImportExport.classList.remove('hidden');
+                }
+            });
+        }
+
+        // --- News Management Logic ---
+        postNewsBtn.addEventListener('click', async () => {
+            const title = newsTitleInput.value.trim();
+            const content = newsContentInput.value.trim();
+            const imageUrl = newsImageUrlInput.value.trim();
+
+            if (!title || !content) {
+                showMessage("Please provide a title and content for the news article.");
+                return;
+            }
+
+            const { error } = await supabaseClient.from('news').insert([
+                { title, content, image_url: imageUrl || null }
+            ]);
+
+            if (error) {
+                showMessage("Error posting news: " + error.message);
+            } else {
+                showMessage("News article posted successfully!");
+                newsTitleInput.value = '';
+                newsContentInput.value = '';
+                newsImageUrlInput.value = '';
+                logEvent('Posted News', { title });
+            }
+        });
+
+        async function listenToInterestRate() {
+            const { data, error } = await supabaseClient.from('settings').select('value').eq('key', 'interestRate').single();
+            if (error || !data) {
+                console.error("Could not fetch interest rate.");
+                return;
+            }
+            interestRateInput.value = data.value.rate;
+        }
+
+        setInterestRateBtn.addEventListener('click', async () => {
+            const rate = parseFloat(interestRateInput.value);
+            if (isNaN(rate) || rate < 0) {
+                showMessage("Please enter a valid interest rate.");
+                return;
+            }
+            await supabaseClient.from('settings').update({ value: { rate } }).eq('key', 'interestRate');
+            showMessage("Interest rate updated successfully.");
+        });
+
+        collectTaxBtn.addEventListener('click', async () => {
+            const taxPercent = parseFloat(taxAmountInput.value);
+            if (isNaN(taxPercent) || taxPercent <= 0) {
+                showMessage("Please enter a valid tax percentage.");
+                return;
+            }
+
+            const { data: users, error: usersError } = await supabaseClient.from('users').select('sydid, balance');
+            if (usersError) {
+                showMessage("Error fetching users for tax collection.");
+                return;
+            }
+
+            for (const user of users) {
+                const taxAmount = user.balance * (taxPercent / 100);
+                const newBalance = user.balance - taxAmount;
+                await supabaseClient.from('users').update({ balance: newBalance }).eq('sydid', user.sydid);
+            }
+
+            const { data: businesses, error: businessesError } = await supabaseClient.from('businesses').select('sybid, balance');
+            if (businessesError) {
+                showMessage("Error fetching businesses for tax collection.");
+                return;
+            }
+
+            for (const business of businesses) {
+                const taxAmount = business.balance * (taxPercent / 100);
+                const newBalance = business.balance - taxAmount;
+                await supabaseClient.from('businesses').update({ balance: newBalance }).eq('sybid', business.sybid);
+            }
+
+            showMessage(`Successfully collected ${taxPercent}% tax from all users and businesses.`);
+        });
+
+        payInterestBtn.addEventListener('click', async () => {
+            const { data: rateData, error: rateError } = await supabaseClient.from('settings').select('value').eq('key', 'interestRate').single();
+            if (rateError || !rateData) {
+                showMessage("Could not get interest rate.");
+                return;
+            }
+            const interestRate = rateData.value.rate;
+
+            const { data: users, error: usersError } = await supabaseClient.from('users').select('sydid, savings');
+            if (usersError) {
+                showMessage("Error fetching users for interest payment.");
+                return;
+            }
+
+            for (const user of users) {
+                if (user.savings && user.savings.length > 0) {
+                    user.savings.forEach(vault => {
+                        vault.balance += vault.balance * (interestRate / 100);
+                    });
+                    await supabaseClient.from('users').update({ savings: user.savings }).eq('sydid', user.sydid);
+                }
+            }
+
+            const { data: businesses, error: businessesError } = await supabaseClient.from('businesses').select('sybid, savings');
+            if (businessesError) {
+                showMessage("Error fetching businesses for interest payment.");
+                return;
+            }
+
+            for (const business of businesses) {
+                if (business.savings && business.savings.length > 0) {
+                    business.savings.forEach(vault => {
+                        vault.balance += vault.balance * (interestRate / 100);
+                    });
+                    await supabaseClient.from('businesses').update({ savings: business.savings }).eq('sybid', business.sybid);
+                }
+            }
+
+            showMessage(`Successfully paid ${interestRate}% interest to all savings vaults.`);
+        });
+
+        sendReportsBtn.addEventListener('click', () => {
+            showMessage("Monthly reports sent to all users.");
+        });
+
+        async function listenToAllDebts() {
+            const { data: loans, error: loansError } = await supabaseClient.from('loans').select('applicant_id, outstanding_debt').gt('outstanding_debt', 0);
+            const { data: users, error: usersError } = await supabaseClient.from('users').select('sydid, creditCard').gt('creditCard->>debt', 0);
+
+            if (loansError || usersError) {
+                showMessage("Error fetching debts.");
+                return;
+            }
+
+            const debts = [];
+            loans.forEach(l => debts.push({ id: l.applicant_id, type: 'Loan', amount: l.outstanding_debt }));
+            users.forEach(u => {
+                if (u.creditCard && u.creditCard.debt > 0) {
+                    debts.push({ id: u.sydid, type: 'Credit Card', amount: u.creditCard.debt });
+                }
+            });
+
+            renderAllDebts(debts);
+        }
+
+        function renderAllDebts(debts) {
+            allDebtsTable.innerHTML = '';
+            if (debts.length === 0) {
+                allDebtsTable.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-gray-400">No outstanding debts.</td></tr>';
+                return;
+            }
+
+            debts.forEach(debt => {
+                const row = document.createElement('tr');
+                row.className = 'border-b border-gray-700';
+                row.innerHTML = `
+                    <td class="p-4 text-gray-300">${debt.id}</td>
+                    <td class="p-4 text-gray-300">${debt.type}</td>
+                    <td class="p-4 text-gray-300">${debt.amount.toFixed(2)}</td>
+                `;
+                allDebtsTable.appendChild(row);
+            });
+        }
+
+        // Filter card users in admin card management tab
+        cardUserSearchInput.addEventListener('keyup', async (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            if (!searchTerm) {
+                populateCardUserList(); // Reset if search is empty
+                return;
+            }
+            const { data: users, error } = await supabaseClient.rpc('search_users_with_cards', { search_term: searchTerm });
+
+            if (error) {
+                showMessage("Error searching card users.");
+                console.error('Error searching card users:', error);
+                return;
+            }
+            renderCardUserList(users);
+        });
+
+        // --- App Initialization ---
+        async function initializeApp() {
+            updateProgress(50);
+
+            const adminStaySignedIn = localStorage.getItem('adminStaySignedIn');
+            if (adminStaySignedIn === 'true') {
+                isAdmin = true;
+                currentUserId = 'admin';
+                showView('admin-dashboard-view');
+                activateAdminTab('user-management');
+                setupAdminRealtime();
+                resetInactivityTimer();
+                updateProgress(100);
+                setTimeout(() => {
+                    loadingScreen.style.display = 'none';
+                    appContainer.style.display = 'block';
+                }, 500);
+                return;
+            }
+
+            const cachedSession = getCachedData('session');
+            if (cachedSession) {
+                const { data, error } = await supabaseClient.auth.setSession(cachedSession);
+            }
+
+            const { data: { session } } = await supabaseClient.auth.getSession();
+
+            supabaseClient.auth.onAuthStateChange((event, session) => {
+                setCachedData('session', session);
+            });
+
+            if (session) {
+                const { data: user, error } = await supabaseClient.from('users').select('*').eq('sydid', session.user.id).single();
+                if (user && !error) {
+                    currentUserId = user.sydid;
+                    currentUserType = 'user';
+                    isAdmin = user.isAdmin;
+                    if (isAdmin) {
+                        showView('admin-dashboard-view');
+                        activateAdminTab('user-management');
+                        setupAdminRealtime();
+                    } else {
+                        showView('user-dashboard-view');
+                        setupUserRealtime(currentUserId);
+                    }
+                } else {
+                    const { data: business, error: businessError } = await supabaseClient.from('businesses').select('*').eq('sybid', session.user.id).single();
+                    if (business && !businessError) {
+                        currentUserId = business.sybid;
+                        currentUserType = 'business';
+                        showView('business-dashboard-view');
+                        setupBusinessRealtime(currentUserId);
+                    } else {
+                        const { data: staff, error: staffError } = await supabaseClient.from('staff').select('*').eq('username', session.user.email).single();
+                        if (staff && !staffError) {
+                            currentUserId = staff.username;
+                            currentUserType = 'staff';
+                            currentBusinessSybid = staff.business_sybid;
+                            showView('staff-dashboard-view');
+                            setupStaffRealtime(currentBusinessSybid, staff.name);
+                        } else {
+                            showView('login-view');
+                        }
+                    }
+                }
+            } else {
+                showView('login-view');
+            }
+            updateProgress(100);
+            setTimeout(() => {
+                loadingScreen.style.display = 'none';
+                appContainer.style.display = 'block';
+            }, 500);
+        }
+
+        // Helper to activate a specific admin tab by name
+        function activateAdminTab(tabName) {
+            adminSectionTabs.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            [...adminSectionTabs.children].forEach(t => {
+                if (t.dataset.adminTab === tabName) {
+                    t.classList.add('active');
+                }
+            });
+            adminUserManagement.classList.add('hidden');
+            adminBusinessManagement.classList.add('hidden');
+            adminFinancialManagement.classList.add('hidden');
+            newsManagementTab.classList.add('hidden');
+            adminLogsTab.classList.add('hidden');
+            adminImportExport.classList.add('hidden');
+            if (tabName === 'user-management') adminUserManagement.classList.remove('hidden');
+            else if (tabName === 'business-management') adminBusinessManagement.classList.remove('hidden');
+            else if (tabName === 'financial-management') adminFinancialManagement.classList.remove('hidden');
+            else if (tabName === 'news-management') newsManagementTab.classList.remove('hidden');
+            else if (tabName === 'logs-tab') adminLogsTab.classList.remove('hidden');
+            else if (tabName === 'import-export') adminImportExport.classList.remove('hidden');
+        }
+
+        initializeApp();
+    };
+</script>
+</body>
+</html>

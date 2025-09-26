@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sylvaria News</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #111827; /* Dark blue-gray */
+            color: #f3f4f6;
+        }
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.2);
+            border-left-color: #f87171; /* Red */
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .news-card {
+            background-color: #1f2937;
+            border-radius: 1rem;
+            padding: 2rem;
+            transition: transform 0.3s;
+        }
+        .news-card:hover {
+            transform: translateY(-5px);
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <div id="loading-screen" class="fixed inset-0 flex flex-col items-center justify-center bg-gray-900 z-50">
+        <div class="spinner"></div>
+        <p class="mt-4 text-gray-400">Fetching Latest News...</p>
+    </div>
+
+    <div id="app-container" style="display: none;" class="max-w-4xl mx-auto py-12 px-4">
+        <header class="text-center mb-12">
+            <h1 class="text-5xl font-bold text-white">Sylvaria News</h1>
+            <p class="text-gray-400 mt-2">Your source for official announcements.</p>
+            <a href="launchpad.html" class="text-sky-400 hover:text-sky-300 mt-4 inline-block">&larr; Back to Launchpad</a>
+        </header>
+
+        <main id="news-container" class="space-y-8">
+            <!-- News articles will be injected here -->
+        </main>
+    </div>
+
+    <script>
+        const { createClient } = supabase;
+        const supabaseUrl = 'https://axvztxwocpubtrgpqern.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF4dnp0eHdvY3B1YnRyZ3BxZXJuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc5NzAzODQsImV4cCI6MjA3MzU0NjM4NH0.NI0j8Gl4AoFvmLwiv3YbccGQMwbwuFO0L_CXCTlVCbw';
+        const supabaseClient = createClient(supabaseUrl, supabaseKey);
+
+        window.onload = function() {
+            fetchNews();
+            // Simulate asset loading
+            setTimeout(() => {
+                document.getElementById('loading-screen').style.display = 'none';
+                document.getElementById('app-container').style.display = 'block';
+            }, 500); 
+        };
+
+        async function fetchNews() {
+            const newsContainer = document.getElementById('news-container');
+            const { data, error } = await supabaseClient
+                .from('news')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                newsContainer.innerHTML = `<p class="text-center text-red-400">Error fetching news: ${error.message}</p>`;
+                return;
+            }
+
+            if (data.length === 0) {
+                newsContainer.innerHTML = '<p class="text-center text-gray-400">No news articles have been posted yet.</p>';
+                return;
+            }
+
+            let newsHtml = '';
+            for (const article of data) {
+                newsHtml += `
+                    <div class="news-card">
+                        ${article.image_url ? `<img src="${article.image_url}" alt="${article.title}" class="rounded-lg mb-6 w-full h-64 object-cover">` : ''}
+                        <h2 class="text-3xl font-bold text-white mb-3">${article.title}</h2>
+                        <p class="text-gray-500 text-sm mb-4">Posted on ${new Date(article.created_at).toLocaleDateString()}</p>
+                        <div class="text-gray-300 leading-relaxed">${article.content.replace(/\n/g, '<br>')}</p>
+                    </div>
+                `;
+            }
+            newsContainer.innerHTML = newsHtml;
+        }
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer View</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI Variable', sans-serif;
+            background-color: #f9fafb;
+            color: #1f2937;
+            padding: 2rem;
+        }
+        .card {
+            background-color: #ffffff;
+            padding: 2rem;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+    </style>
+</head>
+<body>
+    <div id="customer-data-container" class="card">
+        <h1 class="text-3xl font-bold text-center mb-6">Customer Account Information</h1>
+        <div id="customer-info" class="hidden space-y-4">
+            <p><strong>Name:</strong> <span id="customer-name"></span></p>
+            <p><strong>Balance:</strong> <span id="customer-balance" class="text-2xl font-bold text-green-600"></span></p>
+        </div>
+        <p id="no-customer-info" class="text-center text-gray-500">Waiting for customer data...</p>
+    </div>
+
+    <script>
+        window.addEventListener('storage', (event) => {
+            if (event.key === 'customer_view_data') {
+                const data = JSON.parse(event.newValue);
+                updateCustomerView(data);
+            }
+        });
+
+        function updateCustomerView(data) {
+            const customerInfo = document.getElementById('customer-info');
+            const noCustomerInfo = document.getElementById('no-customer-info');
+
+            if (data) {
+                document.getElementById('customer-name').textContent = data.name;
+                document.getElementById('customer-balance').textContent = `${data.balance.toFixed(2)} SYL`;
+                customerInfo.classList.remove('hidden');
+                noCustomerInfo.classList.add('hidden');
+            } else {
+                customerInfo.classList.add('hidden');
+                noCustomerInfo.classList.remove('hidden');
+            }
+        }
+
+        // Initial check
+        const initialData = localStorage.getItem('customer_view_data');
+        if (initialData) {
+            updateCustomerView(JSON.parse(initialData));
+        }
+    </script>
+</body>
+</html>

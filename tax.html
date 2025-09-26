@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sylvaria Tax Collection</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #111827; /* Dark Blue-Gray */
+            color: #f3f4f6;
+        }
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.2);
+            border-left-color: #60a5fa; /* Light Blue */
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .card {
+            background-color: #1f2937;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.25);
+        }
+        .form-input {
+            background-color: #374151;
+            border: 1px solid #4b5563;
+            color: #f3f4f6;
+        }
+        .btn-primary {
+            background-color: #3b82f6; /* Blue */
+            transition: background-color 0.3s;
+        }
+        .btn-primary:hover {
+            background-color: #2563eb;
+        }
+        .btn-secondary {
+            background-color: #374151; /* Dark Gray */
+            color: #f3f4f6; /* Light Gray */
+        }
+        .btn-secondary:hover {
+            background-color: #4b5563; /* Darker Gray */
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <div id="loading-screen" class="fixed inset-0 flex flex-col items-center justify-center bg-gray-900 z-50">
+        <div class="spinner"></div>
+        <p class="mt-4 text-gray-400">Loading Tax App...</p>
+    </div>
+
+    <div id="app-container" style="display: none;" class="w-full">
+        <div id="login-view" class="min-h-screen flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+            <div class="max-w-md w-full space-y-8">
+                <div>
+                    <h1 class="mt-6 text-center text-4xl font-extrabold text-white">Tax Collection</h1>
+                    <p id="login-header-text" class="mt-2 text-center text-md text-gray-400">Login with your SYL-Bank credentials.</p>
+                </div>
+                <div id="user-login-form" class="mt-8 space-y-6 card p-8">
+                    <div>
+                        <label for="sydid" class="sr-only">SYDID</label>
+                        <input id="sydid" name="sydid" type="text" required class="form-input appearance-none rounded-md relative block w-full px-3 py-3 placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="SYDID (9 Digits)" maxlength="9">
+                    </div>
+                    <div>
+                        <label for="password" class="sr-only">Password</label>
+                        <input id="password" name="password" type="password" required class="form-input appearance-none rounded-md relative block w-full px-3 py-3 placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="Password (6 Digits)" maxlength="6">
+                    </div>
+                    <div>
+                        <label for="keyword" class="sr-only">Keyword</label>
+                        <input id="keyword" name="keyword" type="text" required class="form-input appearance-none rounded-md relative block w-full px-3 py-3 placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="Keyword (4 Digits)" maxlength="4">
+                    </div>
+                    <p id="login-error" class="text-red-400 text-sm text-center mt-2 hidden">Invalid credentials.</p>
+                    <div>
+                        <button id="login-btn" class="btn-primary group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            Sign in
+                        </button>
+                    </div>
+                </div>
+
+                <div id="admin-login-form" class="hidden mt-8 space-y-6 card p-8">
+                     <div>
+                        <label for="admin-username" class="sr-only">Username</label>
+                        <input id="admin-username" type="text" required class="form-input appearance-none rounded-md relative block w-full px-3 py-3 placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="Username">
+                    </div>
+                    <div>
+                        <label for="admin-password" class="sr-only">Password</label>
+                        <input id="admin-password" type="password" required class="form-input appearance-none rounded-md relative block w-full px-3 py-3 placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="Password">
+                    </div>
+                    <div>
+                        <label for="admin-passkey" class="sr-only">Passkey</label>
+                        <input id="admin-passkey" type="password" required class="form-input appearance-none rounded-md relative block w-full px-3 py-3 placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="Passkey">
+                    </div>
+                    <div>
+                        <label for="admin-govpasskey" class="sr-only">Govpasskey</label>
+                        <input id="admin-govpasskey" type="password" required class="form-input appearance-none rounded-md relative block w-full px-3 py-3 placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="Govpasskey">
+                    </div>
+                    <div>
+                        <label for="secure-gov-code" class="sr-only">SecureGOVnumber</label>
+                        <button type="button" id="send-code-btn" class="btn-secondary w-full my-2">Send Code</button>
+                        <input type="text" id="secure-gov-code" class="form-input" placeholder="Enter 8-digit code" required />
+                    </div>
+                    <p id="admin-login-error" class="text-red-400 text-sm text-center mt-2 hidden">Invalid admin credentials.</p>
+                    <button id="admin-login-btn" class="btn-primary w-full flex justify-center py-3 px-4">Log In as Admin</button>
+                </div>
+
+                 <div class="text-center">
+                    <button id="admin-mode-btn" class="font-medium text-sky-400 hover:text-sky-300">Admin Login</button>
+                 </div>
+                 <p class="mt-2 text-center text-sm text-gray-500">
+                    <a href="launchpad.html" class="font-medium text-sky-400 hover:text-sky-300"> &larr; Back to Launchpad </a>
+                </p>
+            </div>
+        </div>
+
+        <div id="dashboard-view" class="hidden max-w-5xl mx-auto py-12 px-4">
+            <div class="flex justify-between items-center mb-8">
+                <h1 id="welcome-heading" class="text-3xl font-bold text-white"></h1>
+                <button id="logout-btn" class="bg-gray-700 text-gray-300 hover:bg-gray-600 font-semibold py-2 px-4 rounded-lg transition">Logout</button>
+            </div>
+            
+            <!-- User View -->
+            <div id="user-view" class="hidden space-y-6">
+                <h2 class="text-2xl font-semibold text-white">Your Tax Obligations</h2>
+                <div id="user-taxes-list" class="card p-6">
+                    <!-- User taxes will be rendered here -->
+                </div>
+            </div>
+
+            <!-- Admin View -->
+            <div id="admin-view" class="hidden space-y-6">
+                <h2 class="text-2xl font-semibold text-white">Tax Administration</h2>
+                <div class="card p-6">
+                    <h3 class="text-xl font-medium mb-4 text-white">All User Taxes</h3>
+                    <div id="all-taxes-list" class="overflow-x-auto">
+                        <!-- All taxes will be rendered here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createClient } = supabase;
+        const supabaseUrl = 'https://axvztxwocpubtrgpqern.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF4dnp0eHdvY3B1YnRyZ3BxZXJuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc5NzAzODQsImV4cCI6MjA3MzU0NjM4NH0.NI0j8Gl4AoFvmLwiv3YbccGQMwbwuFO0L_CXCTlVCbw';
+        const supabaseClient = createClient(supabaseUrl, supabaseKey);
+
+        // --- DOM Elements ---
+        const loadingScreen = document.getElementById('loading-screen');
+        const appContainer = document.getElementById('app-container');
+        const loginView = document.getElementById('login-view');
+        const dashboardView = document.getElementById('dashboard-view');
+        const userView = document.getElementById('user-view');
+        const adminView = document.getElementById('admin-view');
+        const welcomeHeading = document.getElementById('welcome-heading');
+        const userTaxesList = document.getElementById('user-taxes-list');
+        const allTaxesList = document.getElementById('all-taxes-list');
+        const userLoginForm = document.getElementById('user-login-form');
+        const adminLoginForm = document.getElementById('admin-login-form');
+
+        const loginBtn = document.getElementById('login-btn');
+        const adminLoginBtn = document.getElementById('admin-login-btn');
+        const logoutBtn = document.getElementById('logout-btn');
+        const loginError = document.getElementById('login-error');
+        const adminLoginError = document.getElementById('admin-login-error');
+        const adminModeBtn = document.getElementById('admin-mode-btn');
+        const sendCodeBtn = document.getElementById('send-code-btn');
+
+        let currentUser = null;
+        let isAdmin = false;
+
+        // --- App Initialization ---
+        window.onload = function() {
+            setTimeout(() => {
+                const sessionUser = localStorage.getItem('syl_user');
+                const sessionIsAdmin = localStorage.getItem('syl_admin');
+
+                if (sessionUser) {
+                    currentUser = JSON.parse(sessionUser);
+                    isAdmin = false;
+                    showDashboard();
+                } else if (sessionIsAdmin) {
+                    currentUser = { name: 'Admin' };
+                    isAdmin = true;
+                    showDashboard();
+                } else {
+                    showLoginView();
+                }
+                loadingScreen.style.display = 'none';
+                appContainer.style.display = 'block';
+            }, 500);
+        };
+
+        // --- View Management ---
+        function showLoginView() {
+            loginView.style.display = 'flex';
+            dashboardView.style.display = 'none';
+            localStorage.removeItem('syl_user');
+            localStorage.removeItem('syl_admin');
+            currentUser = null;
+            isAdmin = false;
+        }
+
+        function showDashboard() {
+            loginView.style.display = 'none';
+            dashboardView.style.display = 'block';
+            welcomeHeading.textContent = `Welcome, ${currentUser.name}`;
+
+            if (isAdmin) {
+                adminView.style.display = 'block';
+                userView.style.display = 'none';
+                loadAdminTaxData();
+            } else {
+                userView.style.display = 'block';
+                adminView.style.display = 'none';
+                loadUserTaxData(currentUser.sydid);
+            }
+        }
+
+        // --- Authentication ---
+        loginBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            loginError.classList.add('hidden');
+
+            const sydid = document.getElementById('sydid').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const keyword = document.getElementById('keyword').value.trim();
+
+            if (sydid.length !== 9 || password.length !== 6 || keyword.length !== 4) {
+                loginError.textContent = 'Please enter valid credentials.';
+                loginError.classList.remove('hidden');
+                return;
+            }
+
+            const { data, error } = await supabaseClient
+                .from('users')
+                .select('*')
+                .eq('sydid', sydid)
+                .single();
+
+            if (error || !data || data.password !== password || data.keyword !== keyword) {
+                loginError.textContent = 'Invalid credentials.';
+                loginError.classList.remove('hidden');
+                return;
+            }
+            
+            currentUser = data;
+            isAdmin = false;
+            localStorage.setItem('syl_user', JSON.stringify(data));
+            showDashboard();
+        });
+
+        let generatedSecureCode = null;
+        sendCodeBtn.addEventListener('click', () => {
+            generatedSecureCode = Math.floor(10000000 + Math.random() * 90000000).toString();
+            alert(`A secure 8-digit code has been sent to rsloth6@gmail.com. Please check your inbox and enter the code. Your code is: ${generatedSecureCode}`);
+        });
+
+        adminLoginBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('admin-username').value.trim();
+            const password = document.getElementById('admin-password').value.trim();
+            const passkey = document.getElementById('admin-passkey').value.trim();
+            const govpasskey = document.getElementById('admin-govpasskey').value.trim();
+            const secureCode = document.getElementById('secure-gov-code').value.trim();
+
+            if (username === 'GOV' && password === 'Securegov' && passkey === '10191212' && govpasskey === '0805' && secureCode === generatedSecureCode) {
+                currentUser = { name: 'Admin' };
+                isAdmin = true;
+                localStorage.setItem('syl_admin', 'true');
+                showDashboard();
+            } else {
+                adminLoginError.textContent = 'Invalid credentials.';
+                adminLoginError.classList.remove('hidden');
+            }
+        });
+
+        adminModeBtn.addEventListener('click', () => {
+            if (adminLoginForm.classList.contains('hidden')) {
+                userLoginForm.classList.add('hidden');
+                adminLoginForm.classList.remove('hidden');
+                adminModeBtn.textContent = 'User Login';
+            } else {
+                adminLoginForm.classList.add('hidden');
+                userLoginForm.classList.remove('hidden');
+                adminModeBtn.textContent = 'Admin Login';
+            }
+        });
+
+        logoutBtn.addEventListener('click', showLoginView);
+
+        // --- Tax Data Logic ---
+        async function loadUserTaxData(sydid) {
+            const { data, error } = await supabaseClient
+                .from('taxes')
+                .select('*')
+                .eq('sydid', sydid);
+
+            if (error) {
+                userTaxesList.innerHTML = `<p class="text-center text-red-400">Error fetching taxes: ${error.message}</p>`;
+                return;
+            }
+            renderUserTaxes(data);
+        }
+
+        async function loadAdminTaxData() {
+            const { data, error } = await supabaseClient
+                .from('taxes')
+                .select('*, users (name)')
+                .order('created_at', { ascending: false });
+
+             if (error) {
+                allTaxesList.innerHTML = `<p class="text-center text-red-400">Error fetching taxes: ${error.message}</p>`;
+                return;
+            }
+            renderAdminTaxes(data);
+        }
+
+        function renderUserTaxes(taxes) {
+            if (!taxes || taxes.length === 0) {
+                userTaxesList.innerHTML = '<p class="text-center text-gray-400">You have no outstanding taxes.</p>';
+                return;
+            }
+
+            let html = '<div class="space-y-4">';
+            taxes.forEach(tax => {
+                const statusColor = tax.status === 'paid' ? 'text-green-400' : 'text-yellow-400';
+                html += `
+                    <div class="flex justify-between items-center p-4 bg-gray-800 rounded-lg">
+                        <div>
+                            <p class="font-semibold text-white">Amount: <span class="font-bold text-lg">${tax.amount} SYL</span></p>
+                            <p class="text-sm text-gray-400">Due: ${new Date(tax.due_date).toLocaleDateString()}</p>
+                            <p class="text-sm font-medium ${statusColor}">Status: ${tax.status.toUpperCase()}</p>
+                        </div>
+                        ${tax.status !== 'paid' ? 
+                            `<button onclick="payTax(${tax.id}, ${tax.amount})" class="btn-primary font-semibold py-2 px-4 rounded-lg">Pay Now</button>` : 
+                            '<span class="text-green-400 font-bold">PAID</span>'
+                        }
+                    </div>
+                `;
+            });
+            html += '</div>';
+            userTaxesList.innerHTML = html;
+        }
+
+        function renderAdminTaxes(taxes) {
+            if (!taxes || taxes.length === 0) {
+                allTaxesList.innerHTML = '<p class="text-center text-gray-400">No tax records found.</p>';
+                return;
+            }
+
+            let html = `
+                <table class="min-w-full divide-y divide-gray-700">
+                    <thead class="bg-gray-800">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">User Name</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">SYDID</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Amount</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Due Date</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-gray-900 divide-y divide-gray-700">
+            `;
+            taxes.forEach(tax => {
+                 const statusColor = tax.status === 'paid' ? 'text-green-400' : 'text-yellow-400';
+                html += `
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-white">${tax.users ? tax.users.name : 'N/A'}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">${tax.sydid || 'N/A'}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">${tax.amount} SYL</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-400">${new Date(tax.due_date).toLocaleDateString()}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium ${statusColor}">${tax.status.toUpperCase()}</td>
+                    </tr>
+                `;
+            });
+            html += '</tbody></table>';
+            allTaxesList.innerHTML = html;
+        }
+
+        async function payTax(taxId, amount) {
+            if (currentUser.balance < amount) {
+                alert("Insufficient funds in your bank account!");
+                return;
+            }
+
+            if (!confirm(`Are you sure you want to pay ${amount} SYL for this tax? The amount will be deducted from your bank account.`)) {
+                return;
+            }
+
+            const newBalance = currentUser.balance - amount;
+
+            // Update user's balance in the bank
+            const { error: balanceError } = await supabaseClient
+                .from('users')
+                .update({ balance: newBalance })
+                .eq('sydid', currentUser.sydid);
+
+            if (balanceError) {
+                alert("Error updating bank balance: " + balanceError.message);
+                return;
+            }
+
+            // Update tax status
+            const { error: taxError } = await supabaseClient
+                .from('taxes')
+                .update({ status: 'paid' })
+                .eq('id', taxId);
+
+            if (taxError) {
+                alert("Error updating tax status: " + taxError.message);
+                // Note: In a real app, you'd handle this inconsistency (e.g., refund the user)
+                return;
+            }
+
+            alert("Tax paid successfully!");
+            // Refresh user data
+            currentUser.balance = newBalance;
+            localStorage.setItem('syl_user', JSON.stringify(currentUser));
+            loadUserTaxData(currentUser.sydid);
+        }
+
+    </script>
+</body>
+</html>

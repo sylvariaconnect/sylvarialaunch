@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sylvaria Universe</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #111827;
+            color: #f3f4f6;
+        }
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.2);
+            border-left-color: #38bdf8;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .card {
+            background-color: #1f2937;
+            border-radius: 1.5rem;
+            transform: translateY(0);
+            transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.25);
+        }
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+        .card-logo {
+            width: 100px;
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            margin: 0 auto 1.5rem;
+            background: linear-gradient(145deg, #374151, #111827);
+            box-shadow: inset 0 2px 4px 0 rgba(0,0,0,0.5);
+        }
+        .bank-logo-shape {
+            width: 50px;
+            height: 50px;
+            background-color: #34d399; /* Green */
+            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+        }
+        .tax-logo-shape {
+            width: 50px;
+            height: 50px;
+            background-color: #3b82f6; /* Blue */
+            border-radius: 50%;
+        }
+        .citizen-logo-shape {
+            width: 50px;
+            height: 50px;
+            background-color: #ec4899; /* Pink */
+            clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); /* Diamond */
+        }
+        .marketplace-logo-shape {
+            width: 50px;
+            height: 50px;
+            background-color: #f59e0b; /* Amber */
+        }
+        .connect-logo-shape {
+            width: 50px;
+            height: 50px;
+            background-color: #8b5cf6; /* Violet */
+            border-radius: 50%;
+            position: relative;
+        }
+        .connect-logo-shape::before, .connect-logo-shape::after {
+            content: '';
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background-color: #8b5cf6;
+            border-radius: 50%;
+        }
+        .connect-logo-shape::before {
+            top: -15px;
+            left: -15px;
+            opacity: 0.6;
+        }
+        .connect-logo-shape::after {
+            bottom: -15px;
+            right: -15px;
+            opacity: 0.6;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center">
+
+    <div id="loading-screen" class="fixed inset-0 flex flex-col items-center justify-center bg-gray-900 z-50">
+        <div class="spinner"></div>
+        <p class="mt-4 text-gray-400">Loading Assets...</p>
+    </div>
+
+    <div id="app-container" style="display: none;" class="text-center px-4">
+        <header class="mb-16">
+            <h1 class="text-5xl font-bold text-white tracking-tight">Welcome to the <span class="text-sky-400">Sylvaria Universe</span></h1>
+            <p class="text-gray-400 mt-4 text-lg">Your central hub for financial, civic, and social applications.</p>
+        </header>
+
+        <main class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-8">
+            <!-- Sylvaria Bank -->
+            <a href="index.html" class="card p-8 block">
+                <div class="card-logo">
+                    <div class="bank-logo-shape"></div>
+                </div>
+                <h2 class="text-2xl font-semibold text-white mb-2">Sylvaria Bank</h2>
+                <p class="text-gray-400">Manage funds, cards, and loans.</p>
+            </a>
+
+            <!-- Sylvaria Tax -->
+            <a href="tax.html" class="card p-8 block">
+                <div class="card-logo">
+                    <div class="tax-logo-shape"></div>
+                </div>
+                <h2 class="text-2xl font-semibold text-white mb-2">Sylvaria Tax</h2>
+                <p class="text-gray-400">Handle your civic duties with ease.</p>
+            </a>
+
+            <!-- Sylvaria Citizen Portal -->
+            <a href="citizen-portal.html" class="card p-8 block">
+                <div class="card-logo">
+                    <div class="citizen-logo-shape"></div>
+                </div>
+                <h2 class="text-2xl font-semibold text-white mb-2">Citizen Portal</h2>
+                <p class="text-gray-400">News, alerts, and admin chat.</p>
+            </a>
+
+            <!-- Citizen Marketplace -->
+            <a href="marketplace.html" class="card p-8 block">
+                <div class="card-logo">
+                    <div class="marketplace-logo-shape"></div>
+                </div>
+                <h2 class="text-2xl font-semibold text-white mb-2">Marketplace</h2>
+                <p class="text-gray-400">Buy and sell goods and services.</p>
+            </a>
+
+            <!-- Sylvaria Connect -->
+            <a href="connect.html" class="card p-8 block">
+                <div class="card-logo">
+                    <div class="connect-logo-shape"></div>
+                </div>
+                <h2 class="text-2xl font-semibold text-white mb-2">Sylvaria Connect</h2>
+                <p class="text-gray-400">Share your life with the community.</p>
+            </a>
+        </main>
+    </div>
+
+    <script>
+        window.onload = function() {
+            // Simulate asset loading
+            setTimeout(() => {
+                document.getElementById('loading-screen').style.display = 'none';
+                document.getElementById('app-container').style.display = 'block';
+            }, 500); // Adjust delay as needed
+        };
+    </script>
+
+</body>
+</html>

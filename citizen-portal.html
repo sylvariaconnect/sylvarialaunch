@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sylvaria Citizen Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #111827;
+            color: #f3f4f6;
+        }
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.2);
+            border-left-color: #f472b6; /* Pink */
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .card {
+            background-color: #1f2937;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.25);
+        }
+        .form-input, .file-input::file-selector-button {
+            background-color: #374151;
+            border: 1px solid #4b5563;
+            color: #f3f4f6;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+        }
+        .file-input::file-selector-button {
+            margin-right: 1rem;
+            transition: background-color 0.3s;
+        }
+        .file-input::file-selector-button:hover {
+            background-color: #4b5563;
+        }
+        .btn-primary {
+            background-color: #ec4899; /* Pink */
+            transition: background-color 0.3s;
+        }
+        .btn-primary:hover {
+            background-color: #f472b6;
+        }
+        .btn-secondary {
+            background-color: #374151;
+        }
+        .btn-secondary:hover {
+            background-color: #4b5563;
+        }
+        .tab.active {
+            border-bottom-color: #ec4899; /* Pink */
+            color: #ec4899; /* Pink */
+        }
+        .chat-bubble-user {
+            background-color: #374151;
+            align-self: flex-end;
+        }
+        .chat-bubble-admin {
+            background-color: #ec4899;
+            color: #1f2937;
+            align-self: flex-start;
+        }
+        .prose-styles {
+            word-break: break-word;
+            overflow-wrap: break-word;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <div id="loading-screen" class="fixed inset-0 flex flex-col items-center justify-center bg-gray-900 z-50">
+        <div class="spinner"></div>
+        <p class="mt-4 text-gray-400">Loading Citizen Portal...</p>
+    </div>
+
+    <div id="app-container" style="display: none;" class="w-full">
+        <!-- Admin Login View -->
+        <div id="admin-login-view" class="hidden min-h-screen flex flex-col items-center justify-center py-12 px-4">
+            <div class="max-w-md w-full space-y-8">
+                <h1 class="text-4xl font-bold text-center text-white">Admin Portal</h1>
+                <div class="card p-8 space-y-6">
+                    <!-- Admin login fields -->
+                    <input id="admin-username" type="text" required class="form-input w-full px-3 py-3 rounded-md" placeholder="Username">
+                    <input id="admin-password" type="password" required class="form-input w-full px-3 py-3 rounded-md" placeholder="Password">
+                    <input id="admin-passkey" type="password" required class="form-input w-full px-3 py-3 rounded-md" placeholder="Passkey">
+                    <input id="admin-govpasskey" type="password" required class="form-input w-full px-3 py-3 rounded-md" placeholder="Govpasskey">
+                    <button type="button" id="send-code-btn" class="btn-secondary w-full py-2 rounded-md">Send Code</button>
+                    <input type="text" id="secure-gov-code" class="form-input w-full px-3 py-3 rounded-md" placeholder="Enter 8-digit code">
+                    <p id="admin-login-error" class="text-red-400 text-sm text-center hidden">Invalid credentials.</p>
+                    <button id="admin-login-btn" class="btn-primary w-full py-3 rounded-md">Log In</button>
+                    <button id="citizen-view-btn" class="text-center w-full text-sky-400 hover:text-sky-300 mt-4">Switch to Citizen View</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Citizen/Admin View -->
+        <div id="main-view" class="max-w-7xl mx-auto py-12 px-4 hidden">
+            <header class="flex justify-between items-center mb-8">
+                <h1 class="text-4xl font-bold text-white">Sylvaria Citizen Portal</h1>
+                <div>
+                    <button id="admin-mode-btn" class="font-medium text-sky-400 hover:text-sky-300 mr-4">Admin Login</button>
+                    <a href="launchpad.html" class="font-medium text-sky-400 hover:text-sky-300">&larr; Back to Launchpad</a>
+                    <button id="logout-btn" class="hidden ml-4 bg-gray-700 text-gray-300 hover:bg-gray-600 font-semibold py-2 px-4 rounded-lg">Logout</button>
+                </div>
+            </header>
+
+            <!-- Emergency Warning Banner -->
+            <div id="emergency-warning-banner" class="hidden bg-red-500 text-white p-4 rounded-lg mb-8 card prose-styles">
+                <h2 id="emergency-title" class="text-2xl font-bold"></h2>
+                <p id="emergency-content" class="mt-2"></p>
+            </div>
+
+            <!-- Tabs -->
+            <div class="tabs flex border-b border-gray-700">
+                <div class="tab active cursor-pointer py-2 px-4" data-tab="news-tab">News</div>
+                <div class="tab cursor-pointer py-2 px-4" data-tab="chat-tab">Citizen Chat</div>
+                <div id="admin-tabs" class="hidden w-full flex justify-end">
+                     <div class="tab cursor-pointer py-2 px-4" data-tab="news-management-tab">Manage News</div>
+                     <div class="tab cursor-pointer py-2 px-4" data-tab="warnings-management-tab">Manage Warnings</div>
+                </div>
+            </div>
+
+            <!-- News Tab -->
+            <div id="news-tab" class="mt-8 space-y-8">
+                <!-- News articles will be injected here -->
+            </div>
+
+            <!-- Chat Tab -->
+            <div id="chat-tab" class="hidden mt-8">
+                <div class="card p-6">
+                    <div id="chat-login" class="text-center">
+                        <h2 class="text-2xl font-semibold text-white mb-4">Enter the Chat</h2>
+                        <input id="chat-full-name" type="text" placeholder="Enter your full name" class="form-input w-full max-w-sm mx-auto px-3 py-3 rounded-md">
+                        <button id="enter-chat-btn" class="btn-primary mt-4 py-2 px-6 rounded-md">Enter</button>
+                    </div>
+                    <div id="chat-interface" class="hidden">
+                        <div id="chat-messages" class="h-96 overflow-y-auto mb-4 p-4 bg-gray-800 rounded-lg flex flex-col space-y-4">
+                            <!-- Chat messages will appear here -->
+                        </div>
+                        <div class="flex">
+                            <input id="chat-input" type="text" placeholder="Type your message..." class="form-input flex-grow rounded-r-none">
+                            <button id="send-chat-btn" class="btn-primary rounded-l-none px-6">Send</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Admin-Only Tabs -->
+            <div id="news-management-tab" class="hidden mt-8 card p-6 space-y-4">
+                 <h2 class="text-2xl font-semibold text-white">Post a News Article</h2>
+                <input type="text" id="news-title" class="form-input" placeholder="Article Title" />
+                <textarea id="news-content" class="form-input h-40" placeholder="Write your news article here..."></textarea>
+                <input type="file" id="news-image-upload" class="file-input w-full" accept="image/*" />
+                <button id="post-news-btn" class="btn-primary">Post News</button>
+            </div>
+
+            <div id="warnings-management-tab" class="hidden mt-8 card p-6 space-y-4">
+                <h2 class="text-2xl font-semibold text-white">Manage Emergency Warning</h2>
+                <input type="text" id="warning-title-input" class="form-input" placeholder="Warning Title" />
+                <textarea id="warning-content-input" class="form-input h-32" placeholder="Warning message..."></textarea>
+                <div class="flex justify-between">
+                    <button id="post-warning-btn" class="btn-primary">Post/Update Warning</button>
+                    <button id="clear-warning-btn" class="btn-danger">Clear Warning</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const { createClient } = supabase;
+        const supabaseUrl = 'https://axvztxwocpubtrgpqern.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF4dnp0eHdvY3B1YnRyZ3BxZXJuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc5NzAzODQsImV4cCI6MjA3MzU0NjM4NH0.NI0j8Gl4AoFvmLwiv3YbccGQMwbwuFO0L_CXCTlVCbw';
+        const supabaseClient = createClient(supabaseUrl, supabaseKey);
+
+        // --- DOM Elements ---
+        const loadingScreen = document.getElementById('loading-screen');
+        const appContainer = document.getElementById('app-container');
+        const adminLoginView = document.getElementById('admin-login-view');
+        const mainView = document.getElementById('main-view');
+        const adminModeBtn = document.getElementById('admin-mode-btn');
+        const citizenViewBtn = document.getElementById('citizen-view-btn');
+        const logoutBtn = document.getElementById('logout-btn');
+        const adminTabs = document.getElementById('admin-tabs');
+
+        // --- App State ---
+        let isAdmin = false;
+        let chatName = null;
+        let chatChannel = null;
+
+        // --- Initialization ---
+        window.onload = () => {
+            setTimeout(() => {
+                if (localStorage.getItem('syl_portal_admin')) {
+                    showAdminView();
+                } else {
+                    showCitizenView();
+                }
+                loadingScreen.style.display = 'none';
+                appContainer.style.display = 'block';
+                fetchEmergencyWarning();
+                fetchNews();
+            }, 500);
+        };
+
+        // --- View Management ---
+        function showAdminView() {
+            isAdmin = true;
+            mainView.style.display = 'block';
+            adminLoginView.style.display = 'none';
+            adminModeBtn.style.display = 'none';
+            logoutBtn.classList.remove('hidden');
+            adminTabs.classList.remove('hidden');
+            document.getElementById('chat-login').style.display = 'none';
+            document.getElementById('chat-interface').style.display = 'block';
+            initializeChat();
+        }
+
+        function showCitizenView() {
+            isAdmin = false;
+            mainView.style.display = 'block';
+            adminLoginView.style.display = 'none';
+            adminModeBtn.style.display = 'block';
+            logoutBtn.classList.add('hidden');
+            adminTabs.classList.add('hidden');
+        }
+
+        adminModeBtn.addEventListener('click', () => {
+            mainView.style.display = 'none';
+            adminLoginView.style.display = 'flex';
+        });
+
+        citizenViewBtn.addEventListener('click', showCitizenView);
+
+        logoutBtn.addEventListener('click', () => {
+            localStorage.removeItem('syl_portal_admin');
+            if(chatChannel) supabaseClient.removeChannel(chatChannel);
+            window.location.reload();
+        });
+
+        // --- Admin Login ---
+        let generatedSecureCode = null;
+        document.getElementById('send-code-btn').addEventListener('click', () => {
+            generatedSecureCode = Math.floor(10000000 + Math.random() * 90000000).toString();
+            alert(`A secure 8-digit code has been sent to rsloth6@gmail.com. Your code is: ${generatedSecureCode}`);
+        });
+
+        document.getElementById('admin-login-btn').addEventListener('click', () => {
+            const username = document.getElementById('admin-username').value.trim();
+            const password = document.getElementById('admin-password').value.trim();
+            const passkey = document.getElementById('admin-passkey').value.trim();
+            const govpasskey = document.getElementById('admin-govpasskey').value.trim();
+            const secureCode = document.getElementById('secure-gov-code').value.trim();
+
+            if (username === 'GOV' && password === 'Securegov' && passkey === '10191212' && govpasskey === '0805' && secureCode === generatedSecureCode) {
+                localStorage.setItem('syl_portal_admin', 'true');
+                showAdminView();
+            } else {
+                document.getElementById('admin-login-error').classList.remove('hidden');
+            }
+        });
+
+        // --- Tab Switching ---
+        document.querySelector('.tabs').addEventListener('click', (e) => {
+            if (!e.target.classList.contains('tab')) return;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            e.target.classList.add('active');
+
+            document.querySelectorAll('[id$="-tab"]').forEach(el => el.classList.add('hidden'));
+            const tabId = e.target.dataset.tab;
+            document.getElementById(tabId).classList.remove('hidden');
+        });
+
+        // --- News Logic ---
+        async function fetchNews() {
+            const container = document.getElementById('news-tab');
+            const { data, error } = await supabaseClient.from('news').select('*').order('created_at', { ascending: false });
+            if (error) {
+                container.innerHTML = `<p class="text-red-400">Error fetching news.</p>`;
+                return;
+            }
+            if (data.length === 0) {
+                container.innerHTML = '<p class="text-gray-400">No news articles yet.</p>';
+                return;
+            }
+            container.innerHTML = data.map(article => `
+                <div class="card p-6">
+                    ${article.image_url ? `<img src="${article.image_url}" alt="${article.title}" class="rounded-lg mb-6 w-full h-64 object-cover">` : ''}
+                    <h2 class="text-3xl font-bold text-white mb-3 prose-styles">${article.title}</h2>
+                    <p class="text-gray-500 text-sm mb-4">Posted on ${new Date(article.created_at).toLocaleDateString()}</p>
+                    <div class="text-gray-300 leading-relaxed prose-styles">${article.content.replace(/\n/g, '<br>')}</div>
+                </div>
+            `).join('');
+        }
+
+        document.getElementById('post-news-btn').addEventListener('click', async () => {
+            const title = document.getElementById('news-title').value.trim();
+            const content = document.getElementById('news-content').value.trim();
+            const imageFile = document.getElementById('news-image-upload').files[0];
+            let imageUrl = null;
+
+            if (!title || !content) return alert("Title and content are required.");
+
+            if (imageFile) {
+                const fileName = `${Date.now()}_${imageFile.name}`;
+                const { data, error } = await supabaseClient.storage.from('news').upload(fileName, imageFile);
+                if (error) return alert("Error uploading image: " + error.message);
+                imageUrl = supabaseClient.storage.from('news').getPublicUrl(data.path).data.publicUrl;
+            }
+
+            const { error } = await supabaseClient.from('news').insert([{ title, content, image_url: imageUrl }]);
+            if (error) return alert("Error posting news: " + error.message);
+            
+            alert("News article posted!");
+            fetchNews();
+            document.getElementById('news-title').value = '';
+            document.getElementById('news-content').value = '';
+            document.getElementById('news-image-upload').value = '';
+        });
+
+        // --- Emergency Warning Logic ---
+        async function fetchEmergencyWarning() {
+            const { data, error } = await supabaseClient.from('emergency_warnings').select('*').eq('is_active', true).single();
+            const banner = document.getElementById('emergency-warning-banner');
+            if (data) {
+                document.getElementById('emergency-title').textContent = data.title;
+                document.getElementById('emergency-content').textContent = data.content;
+                banner.classList.remove('hidden');
+            } else {
+                banner.classList.add('hidden');
+            }
+        }
+
+        document.getElementById('post-warning-btn').addEventListener('click', async () => {
+            const title = document.getElementById('warning-title-input').value.trim();
+            const content = document.getElementById('warning-content-input').value.trim();
+            if (!title || !content) return alert("Title and content are required.");
+
+            // Deactivate old warnings, then insert the new one
+            await supabaseClient.from('emergency_warnings').update({ is_active: false }).eq('is_active', true);
+            const { error } = await supabaseClient.from('emergency_warnings').insert([{ title, content, is_active: true }]);
+            if (error) return alert("Error posting warning: " + error.message);
+            alert("Emergency warning posted!");
+            fetchEmergencyWarning();
+        });
+
+        document.getElementById('clear-warning-btn').addEventListener('click', async () => {
+            await supabaseClient.from('emergency_warnings').update({ is_active: false }).eq('is_active', true);
+            alert("Emergency warning cleared.");
+            fetchEmergencyWarning();
+        });
+
+        // --- Chat Logic ---
+        document.getElementById('enter-chat-btn').addEventListener('click', () => {
+            chatName = document.getElementById('chat-full-name').value.trim();
+            if (chatName) {
+                document.getElementById('chat-login').style.display = 'none';
+                document.getElementById('chat-interface').style.display = 'block';
+                initializeChat();
+            }
+        });
+
+        document.getElementById('send-chat-btn').addEventListener('click', async () => {
+            const input = document.getElementById('chat-input');
+            const message = input.value.trim();
+            if (!message) return;
+
+            const senderName = isAdmin ? 'Admin' : chatName;
+            await supabaseClient.from('chat_messages').insert([{ full_name: senderName, message }]);
+            input.value = '';
+        });
+
+        async function fetchAndRenderChat() {
+            const { data, error } = await supabaseClient.from('chat_messages').select('*').order('created_at');
+            if (error) {
+                console.error("Error fetching chat messages:", error);
+                return;
+            }
+            renderChatMessages(data);
+        }
+
+        function initializeChat() {
+            fetchAndRenderChat(); // Initial fetch
+
+            if (chatChannel) supabaseClient.removeChannel(chatChannel);
+
+            chatChannel = supabaseClient.channel('chat-room')
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages' }, payload => {
+                    fetchAndRenderChat(); // Re-fetch all messages on any new insert
+                })
+                .subscribe();
+        }
+
+        function renderChatMessages(messages) {
+            const container = document.getElementById('chat-messages');
+            container.innerHTML = ''; // Clear existing messages
+
+            messages.forEach(msg => {
+                const bubble = document.createElement('div');
+                bubble.className = 'p-3 rounded-lg max-w-xs prose-styles'; // Added prose-styles
+                bubble.textContent = msg.message;
+                
+                const sender = document.createElement('div');
+                sender.className = 'text-xs mb-1 opacity-70';
+                sender.textContent = msg.full_name;
+
+                if (msg.full_name === 'Admin') {
+                    bubble.classList.add('chat-bubble-admin');
+                } else {
+                    bubble.classList.add('chat-bubble-user');
+                }
+                
+                const wrapper = document.createElement('div');
+                wrapper.className = 'flex flex-col';
+                if (msg.full_name === 'Admin') {
+                    wrapper.classList.add('items-start');
+                } else {
+                    wrapper.classList.add('items-end');
+                }
+                wrapper.appendChild(sender);
+                wrapper.appendChild(bubble);
+                container.appendChild(wrapper);
+            });
+            container.scrollTop = container.scrollHeight;
+        }
+
+    </script>
+</body>
+</html>

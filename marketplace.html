@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sylvaria Citizen Marketplace</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #111827;
+            color: #f3f4f6;
+        }
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.2);
+            border-left-color: #f59e0b; /* Amber */
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .card {
+            background-color: #1f2937;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.25);
+        }
+        .form-input, .file-input::file-selector-button {
+            background-color: #374151;
+            border: 1px solid #4b5563;
+            color: #f3f4f6;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+        }
+        .file-input::file-selector-button {
+            margin-right: 1rem;
+            transition: background-color 0.3s;
+        }
+        .file-input::file-selector-button:hover {
+            background-color: #4b5563;
+        }
+        .btn-primary {
+            background-color: #f59e0b; /* Amber */
+            color: #111827;
+            transition: background-color 0.3s;
+        }
+        .btn-primary:hover {
+            background-color: #fbbF24;
+        }
+        .btn-danger {
+            background-color: #ef4444; /* Red */
+            color: white;
+        }
+        .btn-danger:hover {
+            background-color: #dc2626; /* Darker Red */
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <div id="loading-screen" class="fixed inset-0 flex flex-col items-center justify-center bg-gray-900 z-50">
+        <div class="spinner"></div>
+        <p class="mt-4 text-gray-400">Loading Marketplace...</p>
+    </div>
+
+    <div id="app-container" style="display: none;" class="w-full">
+        <div id="main-view" class="max-w-7xl mx-auto py-12 px-4">
+            <header class="flex flex-wrap justify-between items-center mb-8 gap-4">
+                <h1 class="text-4xl font-bold text-white">Citizen Marketplace</h1>
+                <div id="user-actions">
+                    <!-- Login/Logout buttons will be injected here -->
+                </div>
+            </header>
+
+            <!-- Logged In View: Post a Listing -->
+            <div id="post-listing-view" class="hidden mb-8 card p-6">
+                <h2 class="text-2xl font-semibold text-white mb-4">Create a New Listing</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <input id="item-name" type="text" placeholder="Item Name" class="form-input rounded-md p-3">
+                    <input id="price" type="number" placeholder="Price (SYL)" class="form-input rounded-md p-3">
+                    <textarea id="description" placeholder="Detailed Description" class="form-input md:col-span-2 rounded-md p-3 h-24"></textarea>
+                    <input id="category" type="text" placeholder="Category (e.g., Crafts, Services)" class="form-input rounded-md p-3">
+                    <input id="image-upload" type="file" accept="image/*" class="file-input w-full md:col-span-2">
+                </div>
+                <button id="post-listing-btn" class="btn-primary w-full md:w-auto mt-6 py-2 px-6 rounded-md font-semibold">Post Listing</button>
+            </div>
+
+            <!-- Auth Views -->
+            <div id="auth-container" class="hidden mb-8 card p-6 max-w-md mx-auto">
+                <!-- Login View -->
+                <div id="login-view">
+                    <h2 class="text-2xl font-semibold text-white mb-4 text-center">Login</h2>
+                    <div class="space-y-4">
+                        <input id="login-username" type="text" placeholder="Username" class="form-input w-full rounded-md p-3">
+                        <input id="login-password" type="password" placeholder="Password" class="form-input w-full rounded-md p-3">
+                        <p id="login-error" class="text-red-400 text-sm text-center hidden">Invalid credentials.</p>
+                        <button id="login-btn" class="btn-primary w-full py-2 rounded-md font-semibold">Login</button>
+                        <p class="text-center text-sm text-gray-400">Don't have an account? <button id="show-signup-btn" class="font-medium text-amber-400 hover:text-amber-300">Sign Up</button></p>
+                    </div>
+                </div>
+                <!-- Sign Up View -->
+                <div id="signup-view" class="hidden">
+                    <h2 class="text-2xl font-semibold text-white mb-4 text-center">Create Your Web Account</h2>
+                    <div class="space-y-4">
+                        <p class="text-sm text-gray-400">First, create a username and password for this app.</p>
+                        <input id="signup-username" type="text" placeholder="Choose a Username" class="form-input w-full rounded-md p-3">
+                        <input id="signup-password" type="password" placeholder="Choose a Password" class="form-input w-full rounded-md p-3">
+                        <hr class="border-gray-600 my-4">
+                        <p class="text-sm text-gray-400">Next, verify your bank identity to link your accounts.</p>
+                        <input id="signup-sydid" type="text" placeholder="Your Bank SYDID" maxlength="9" class="form-input w-full rounded-md p-3">
+                        <input id="signup-keyword" type="text" placeholder="Your Bank Keyword" maxlength="4" class="form-input w-full rounded-md p-3">
+                        <p id="signup-error" class="text-red-400 text-sm text-center hidden">Verification failed. Check your SYDID and Keyword.</p>
+                        <button id="signup-btn" class="btn-primary w-full py-2 rounded-md font-semibold">Sign Up</button>
+                        <p class="text-center text-sm text-gray-400">Already have an account? <button id="show-login-view-btn" class="font-medium text-amber-400 hover:text-amber-300">Login</button></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Browse Listings -->
+            <div>
+                <h2 class="text-3xl font-bold text-white mb-6">Browse Listings</h2>
+                <div id="listings-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <!-- Marketplace listings will be injected here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createClient } = supabase;
+        const supabaseUrl = 'https://axvztxwocpubtrgpqern.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF4dnp0eHdvY3B1YnRyZ3BxZXJuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc5NzAzODQsImV4cCI6MjA3MzU0NjM4NH0.NI0j8Gl4AoFvmLwiv3YbccGQMwbwuFO0L_CXCTlVCbw';
+        const supabaseClient = createClient(supabaseUrl, supabaseKey);
+
+        // --- DOM Elements ---
+        const loadingScreen = document.getElementById('loading-screen');
+        const appContainer = document.getElementById('app-container');
+        const userActions = document.getElementById('user-actions');
+        const postListingView = document.getElementById('post-listing-view');
+        const authContainer = document.getElementById('auth-container');
+        const loginView = document.getElementById('login-view');
+        const signupView = document.getElementById('signup-view');
+        const listingsContainer = document.getElementById('listings-container');
+
+        let currentUser = null; // Will hold full user object from `users` table
+        let webUser = null; // Will hold user object from `web_users` table
+
+        // --- Initialization ---
+        window.onload = async () => {
+            const sessionWebUser = localStorage.getItem('syl_web_user');
+            if (sessionWebUser) {
+                webUser = JSON.parse(sessionWebUser);
+                await fetchFullCurrentUser();
+                showLoggedInView();
+            } else {
+                showLoggedOutView();
+            }
+            loadingScreen.style.display = 'none';
+            appContainer.style.display = 'block';
+            fetchListings();
+        };
+
+        // --- View Management ---
+        function showLoggedInView() {
+            authContainer.style.display = 'none';
+            postListingView.style.display = 'block';
+            userActions.innerHTML = `
+                <div class="flex items-center gap-4">
+                    <span class="font-semibold">Welcome, ${webUser.username} | Balance: ${currentUser.balance.toFixed(2)} SYL</span>
+                    <button id="logout-btn" class="bg-gray-700 text-gray-300 hover:bg-gray-600 font-semibold py-2 px-4 rounded-lg">Logout</button>
+                </div>
+            `;
+            document.getElementById('logout-btn').addEventListener('click', logout);
+        }
+
+        function showLoggedOutView() {
+            postListingView.style.display = 'none';
+            authContainer.style.display = 'block';
+            loginView.style.display = 'block';
+            signupView.style.display = 'none';
+            userActions.innerHTML = '<button id="show-auth-btn" class="btn-primary font-semibold py-2 px-4 rounded-lg">Login / Sign Up</button>';
+            document.getElementById('show-auth-btn').addEventListener('click', () => {
+                authContainer.style.display = 'block';
+                userActions.innerHTML = '';
+            });
+            document.getElementById('show-signup-btn').addEventListener('click', () => {
+                loginView.style.display = 'none';
+                signupView.style.display = 'block';
+            });
+            document.getElementById('show-login-view-btn').addEventListener('click', () => {
+                signupView.style.display = 'none';
+                loginView.style.display = 'block';
+            });
+        }
+
+        function logout() {
+            localStorage.removeItem('syl_web_user');
+            currentUser = null;
+            webUser = null;
+            showLoggedOutView();
+            fetchListings();
+        }
+
+        // --- Authentication ---
+        document.getElementById('login-btn').addEventListener('click', async () => {
+            const username = document.getElementById('login-username').value.trim();
+            const password = document.getElementById('login-password').value.trim();
+            const loginError = document.getElementById('login-error');
+            loginError.classList.add('hidden');
+
+            const { data, error } = await supabaseClient.rpc('verify_password', { username_in: username, password_in: password });
+
+            if (error || !data || data.length === 0) {
+                loginError.classList.remove('hidden');
+                return;
+            }
+
+            webUser = data[0];
+            localStorage.setItem('syl_web_user', JSON.stringify(webUser));
+            await fetchFullCurrentUser();
+            showLoggedInView();
+            fetchListings();
+        });
+
+        document.getElementById('signup-btn').addEventListener('click', async () => {
+            const signupError = document.getElementById('signup-error');
+            signupError.classList.add('hidden');
+
+            // 1. Verify Bank Credentials
+            const sydid = document.getElementById('signup-sydid').value.trim();
+            const keyword = document.getElementById('signup-keyword').value.trim();
+            const { data: bankUser, error: bankError } = await supabaseClient.from('users').select('sydid').eq('sydid', sydid).eq('keyword', keyword).single();
+
+            if (bankError || !bankUser) {
+                signupError.textContent = "Verification failed. Check your SYDID and Keyword.";
+                signupError.classList.remove('hidden');
+                return;
+            }
+
+            // 2. Create Web User
+            const username = document.getElementById('signup-username').value.trim();
+            const password = document.getElementById('signup-password').value.trim();
+            if (!username || !password) return alert("Username and password are required.");
+
+            const { data: hashedPassword, error: hashError } = await supabaseClient.rpc('hash_password', { password });
+            if (hashError) return alert("Error securing password: " + hashError.message);
+
+            const { data: newWebUser, error: createError } = await supabaseClient.from('web_users').insert({ username, password_hash: hashedPassword, sydid: bankUser.sydid }).select().single();
+
+            if (createError) {
+                signupError.textContent = "Error creating account: " + createError.message;
+                signupError.classList.remove('hidden');
+                return;
+            }
+
+            alert("Account created successfully! Please log in.");
+            signupView.style.display = 'none';
+            loginView.style.display = 'block';
+        });
+
+        async function fetchFullCurrentUser() {
+            if (!webUser) return;
+            const { data, error } = await supabaseClient.from('users').select('*').eq('sydid', webUser.sydid).single();
+            if (data) currentUser = data;
+        }
+
+        // --- Marketplace Logic ---
+        async function fetchListings() {
+            const { data, error } = await supabaseClient.from('market_listings').select('*').order('created_at', { ascending: false });
+            if (error) {
+                listingsContainer.innerHTML = `<p class="text-red-400 col-span-full">Error fetching listings.</p>`;
+                return;
+            }
+            renderListings(data);
+        }
+
+        function renderListings(listings) {
+            if (!listings || listings.length === 0) {
+                listingsContainer.innerHTML = '<p class="text-gray-400 col-span-full">The marketplace is empty. Be the first to post!</p>';
+                return;
+            }
+            listingsContainer.innerHTML = listings.map(item => {
+                let buttons = '';
+                if (currentUser) {
+                    if (currentUser.sydid === item.seller_sydid) {
+                        buttons = `<button onclick="deleteItem(${item.id})" class="btn-danger font-semibold py-2 px-4 rounded-lg w-full">Delete</button>`;
+                    } else {
+                        buttons = `<button onclick="buyItem(${item.id}, ${item.price}, '${item.seller_sydid}')" class="btn-primary font-semibold py-2 px-4 rounded-lg w-full">Buy</button>`;
+                    }
+                }
+
+                return `
+                <div class="card p-6 flex flex-col">
+                    <img src="${item.image_url || 'https://via.placeholder.com/400x300.png?text=No+Image'}" alt="${item.item_name}" class="w-full h-48 object-cover rounded-lg mb-4">
+                    <h3 class="text-xl font-bold text-white">${item.item_name}</h3>
+                    <p class="text-amber-400 font-semibold text-lg my-2">${item.price} SYL</p>
+                    <p class="text-gray-400 text-sm mb-4 flex-grow">${item.description}</p>
+                    <div class="text-xs text-gray-500 mb-4">
+                        <span>Sold by: ${item.seller_name}</span>
+                        <span class="float-right">Category: ${item.category || 'General'}</span>
+                    </div>
+                    <div class="mt-auto">
+                        ${buttons}
+                    </div>
+                </div>
+            `}).join('');
+        }
+
+        document.getElementById('post-listing-btn').addEventListener('click', async () => {
+            const imageFile = document.getElementById('image-upload').files[0];
+            let imageUrl = null;
+
+            if (imageFile) {
+                const fileName = `${Date.now()}_${imageFile.name}`;
+                const { data, error } = await supabaseClient.storage.from('listings').upload(fileName, imageFile);
+                if (error) return alert("Error uploading image: " + error.message);
+                imageUrl = supabaseClient.storage.from('listings').getPublicUrl(data.path).data.publicUrl;
+            }
+
+            const listing = {
+                seller_sydid: currentUser.sydid,
+                seller_name: currentUser.name,
+                item_name: document.getElementById('item-name').value.trim(),
+                price: parseFloat(document.getElementById('price').value),
+                description: document.getElementById('description').value.trim(),
+                category: document.getElementById('category').value.trim(),
+                image_url: imageUrl,
+            };
+
+            if (!listing.item_name || !listing.price || listing.price <= 0) {
+                alert("Item name and a valid price are required.");
+                return;
+            }
+
+            const { error } = await supabaseClient.from('market_listings').insert([listing]);
+
+            if (error) {
+                alert("Error creating listing: " + error.message);
+            } else {
+                alert("Your listing has been posted!");
+                fetchListings(); // Refresh the listings
+                // Clear form
+                document.getElementById('item-name').value = '';
+                document.getElementById('price').value = '';
+                document.getElementById('description').value = '';
+                document.getElementById('category').value = '';
+                document.getElementById('image-upload').value = '';
+            }
+        });
+
+        async function deleteItem(itemId) {
+            if (!confirm("Are you sure you want to delete this listing?")) return;
+
+            const { error } = await supabaseClient.from('market_listings').delete().eq('id', itemId);
+            if (error) {
+                alert("Error deleting listing: " + error.message);
+            } else {
+                alert("Listing deleted.");
+                fetchListings();
+            }
+        }
+
+        async function buyItem(itemId, price, sellerSydid) {
+            if (!confirm(`You are about to buy this item for ${price} SYL. This amount will be deducted from your bank balance. Proceed?`)) return;
+
+            // Fetch latest buyer balance to prevent race conditions
+            const { data: buyerData, error: buyerError } = await supabaseClient.from('users').select('balance').eq('sydid', currentUser.sydid).single();
+            if (buyerError || !buyerData) return alert("Could not verify your account balance.");
+
+            if (buyerData.balance < price) {
+                return alert("Transaction failed: Insufficient funds.");
+            }
+
+            // Fetch seller to ensure they exist
+            const { data: sellerData, error: sellerError } = await supabaseClient.from('users').select('balance').eq('sydid', sellerSydid).single();
+            if (sellerError || !sellerData) return alert("Transaction failed: Seller not found.");
+
+            const newBuyerBalance = buyerData.balance - price;
+            const newSellerBalance = sellerData.balance + price;
+
+            // Perform transactions
+            const { error: buyerUpdateError } = await supabaseClient.from('users').update({ balance: newBuyerBalance }).eq('sydid', currentUser.sydid);
+            const { error: sellerUpdateError } = await supabaseClient.from('users').update({ balance: newSellerBalance }).eq('sydid', sellerSydid);
+
+            if (buyerUpdateError || sellerUpdateError) {
+                // In a real app, you would need a transaction to roll back the first update if the second fails.
+                alert("A critical error occurred during the transaction. Please contact support.");
+                return;
+            }
+
+            // Delete the listing
+            const { error: deleteError } = await supabaseClient.from('market_listings').delete().eq('id', itemId);
+            if (deleteError) {
+                alert("Transaction complete, but failed to remove listing. Please contact support.");
+                return;
+            }
+
+            alert("Purchase successful!");
+            // Update local user object and refresh UI
+            currentUser.balance = newBuyerBalance;
+            localStorage.setItem('syl_user', JSON.stringify(currentUser));
+            showLoggedInView();
+            fetchListings();
+        }
+
+    </script>
+</body>
+</html>
