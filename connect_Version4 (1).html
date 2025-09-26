@@ -1,4 +1,27 @@
-<!DOCTYPE html> <html lang="en"> <head> <meta charset="UTF-8"> <meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>Sylvaria Connect</title> <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"> <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"> <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet"> </head> <body class="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white min-h-screen flex items-center justify-center"> <div class="w-full max-w-md p-6 bg-gray-800 rounded-lg shadow-lg"> <h2 class="text-3xl font-bold mb-6 text-center">Sign In</h2> <button id="google-signin-button" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded w-full mb-4 flex items-center justify-center"> <i class="fab fa-google mr-2"></i> Continue with Google </button> <div class="flex items-center my-4"> <hr class="flex-grow border-gray-600"> <span class="px-2 text-gray-400">or</span> <hr class="flex-grow border-gray-600"> </div> <form id="login-form"> <input type="email" id="loginEmail" placeholder="Email" class="block mb-2 p-2 w-full rounded bg-gray-700 text-white"> <input type="password" id="loginPassword" placeholder="Password" class="block mb-2 p-2 w-full rounded bg-gray-700 text-white"> <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded w-full">Sign In</button> <button type="button" id="create-account" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded w-full mt-2">Create Account</button> <p id="loginError" class="text-red-400 mt-2"></p> </form> </div>
+<!DOCTYPE html> <html lang="en"> <head> <meta charset="UTF-8"> <meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>Sylvaria Connect</title> <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"> <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"> <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet"> </head> <body class="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white min-h-screen"> <div id="auth-section" class="flex items-center justify-center h-screen"> <div class="w-full max-w-md p-6 bg-gray-800 rounded-lg shadow-lg"> <h2 class="text-3xl font-bold mb-6 text-center">Sign In</h2> <button id="google-signin-button" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded w-full mb-4 flex items-center justify-center"> <i class="fab fa-google mr-2"></i> Continue with Google </button> <div class="flex items-center my-4"> <hr class="flex-grow border-gray-600"> <span class="px-2 text-gray-400">or</span> <hr class="flex-grow border-gray-600"> </div> <form id="login-form"> <input type="email" id="loginEmail" placeholder="Email" class="block mb-2 p-2 w-full rounded bg-gray-700 text-white"> <input type="password" id="loginPassword" placeholder="Password" class="block mb-2 p-2 w-full rounded bg-gray-700 text-white"> <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded w-full">Sign In</button> <button type="button" id="create-account" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded w-full mt-2">Create Account</button> <p id="loginError" class="text-red-400 mt-2"></p> </form> </div> </div>
+
+<div id="dashboard" class="hidden p-6"> <div class="grid grid-cols-1 md:grid-cols-3 gap-6"> <!-- Profile Section --> <div class="bg-gray-800 rounded-lg p-4 shadow"> <img src="https://via.placeholder.com/100" alt="Profile" class="rounded-full w-24 h-24 mx-auto mb-4"> <h3 class="text-xl font-bold text-center">Sylvaria</h3> <p class="text-center text-sm text-gray-400">Department of Energy</p> <p class="text-center text-sm text-gray-400">sloth@outlook.com</p> <div class="mt-4 text-center"> <p>Posts: 1</p> <p>Friends: 0</p> </div> </div>
+
+  <!-- Post Creation -->
+  <div class="bg-gray-800 rounded-lg p-4 shadow col-span-2">
+    <textarea placeholder="What's on your mind?" class="w-full p-2 rounded bg-gray-700 text-white mb-2"></textarea>
+    <div class="flex space-x-2 mb-2">
+      <button class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded">Photo/Video</button>
+      <button class="bg-yellow-600 hover:bg-yellow-700 px-4 py-2 rounded">Feeling/Activity</button>
+    </div>
+    <button class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded w-full">Post</button>
+  </div>
+</div>
+
+<!-- Feed Section -->
+<div class="mt-6 bg-gray-800 rounded-lg p-4 shadow">
+  <div class="mb-4">
+    <p class="text-sm text-gray-400">Department of Energy - 26/01/2025, 07:56:01</p>
+    <p>Friday Update: Happy Friday everyone! Today, we decided to not put solar out, as we already had near full capacity in our power bank. Due to this, we plan to set testing solar out tomorrow. As of now, all citizens will have access to power & backup power. Thank you for your continued support of Sylvaria.</p>
+  </div>
+</div>
+
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script> <script type="module"> import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js"; import { getAuth, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-auth.js"; import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-firestore.js";
 
@@ -35,6 +58,16 @@ document.getElementById("google-signin-button").addEventListener("click", async 
     await signInWithPopup(auth, provider);
   } catch (err) {
     console.error(err);
+  }
+});
+
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    document.getElementById("auth-section").classList.add("hidden");
+    document.getElementById("dashboard").classList.remove("hidden");
+  } else {
+    document.getElementById("auth-section").classList.remove("hidden");
+    document.getElementById("dashboard").classList.add("hidden");
   }
 });
 
