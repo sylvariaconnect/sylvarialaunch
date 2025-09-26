@@ -1,69 +1,234 @@
 <!DOCTYPE html> <html lang="en"> <head> <meta charset="UTF-8"> <meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>Sylvaria Connect</title> <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"> <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"> <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet"> </head> <body class="bg-gray-100"> <div class="container mx-auto p-4"> <h1 class="text-3xl font-bold mb-4">Sylvaria Connect</h1>
 
-<!-- Sign Up Form --> <form id="signup-form" class="mb-4"> <input type="text" id="signupDisplayName" placeholder="Display Name" class="block mb-2 p-2 border"> <input type="email" id="signupEmail" placeholder="Email" class="block mb-2 p-2 border"> <input type="password" id="signupPassword" placeholder="Password" class="block mb-2 p-2 border"> <button type="submit" class="bg-blue-500 text-white px-4 py-2">Sign Up</button> <p id="signupError" class="text-red-500 mt-2"></p> </form>
-
-<!-- Google Sign-In --> <button id="google-signin-button" class="bg-red-500 text-white px-4 py-2 mb-4">Sign in with Google</button>
-
-<!-- Profile Picture Upload --> <input type="file" id="profilePicInput" accept="image/*" class="block mb-2"> <div><img id="cropper-preview" style="max-width: 100%;"></div> <button id="upload-cropped" class="bg-green-500 text-white px-4 py-2 mt-2">Upload Cropped Image</button>
-
-<!-- Dashboard --> <div id="dashboard" class="mt-8 p-4 bg-white rounded shadow"> <h2 class="text-xl font-semibold mb-4">Your Profile</h2> <div class="flex items-center space-x-4"> <img id="profile-pic" src="" alt="Profile Picture" class="w-24 h-24 rounded-full object-cover"> <div> <p class="text-lg font-bold" id="profile-name">Display Name</p> <p class="text-sm text-gray-600" id="profile-email">Email</p> </div> </div> <div class="mt-4"> <h3 class="text-md font-semibold">Your Activity</h3> <p class="text-gray-500">Posts, likes, and more coming soon...</p> </div> </div>
-
-<!-- Facebook-style Features --> <div id="features" class="mt-8 p-4 bg-white rounded shadow"> <h2 class="text-xl font-semibold mb-4">News Feed</h2> <div id="feed-container" class="space-y-4"></div>
-
-<h2 class="text-xl font-semibold mt-8 mb-4">Create Post</h2>
-<form id="post-form" class="mb-4">
-  <textarea id="postContent" placeholder="What's on your mind?" class="w-full p-2 border mb-2"></textarea>
-  <input type="file" id="postMedia" accept="image/*" class="block mb-2">
-  <button type="submit" class="bg-blue-600 text-white px-4 py-2">Post</button>
+<!-- Sign Up Form -->
+<form id="signup-form" class="mb-4">
+  <input type="text" id="signupDisplayName" placeholder="Display Name" class="block mb-2 p-2 border">
+  <input type="email" id="signupEmail" placeholder="Email" class="block mb-2 p-2 border">
+  <input type="password" id="signupPassword" placeholder="Password" class="block mb-2 p-2 border">
+  <button type="submit" class="bg-blue-500 text-white px-4 py-2">Sign Up</button>
+  <p id="signupError" class="text-red-500 mt-2"></p>
 </form>
 
-</div> </div>
+<!-- Google Sign-In -->
+<button id="google-signin-button" class="bg-red-500 text-white px-4 py-2 mb-4">Sign in with Google</button>
+
+<!-- Profile Picture Upload -->
+<input type="file" id="profilePicInput" accept="image/*" class="block mb-2">
+<div><img id="cropper-preview" style="max-width: 100%;"></div>
+<button id="upload-cropped" class="bg-green-500 text-white px-4 py-2 mt-2">Upload Cropped Image</button>
+
+<!-- Dashboard -->
+<div id="dashboard" class="mt-8 p-4 bg-white rounded shadow hidden">
+  <h2 class="text-xl font-semibold mb-4">Your Profile</h2>
+  <div class="flex items-center space-x-4">
+    <img id="profile-pic" src="" alt="Profile Picture" class="w-24 h-24 rounded-full object-cover">
+    <div>
+      <p class="text-lg font-bold" id="profile-name">Display Name</p>
+      <p class="text-sm text-gray-600" id="profile-email">Email</p>
+    </div>
+  </div>
+  <div class="mt-4">
+    <h3 class="text-md font-semibold">Your Activity</h3>
+    <p class="text-gray-500">Posts, likes, and more coming soon...</p>
+  </div>
+</div>
+
+<!-- Facebook-style Features -->
+<div id="features" class="mt-8 p-4 bg-white rounded shadow hidden">
+  <h2 class="text-xl font-semibold mb-4">News Feed</h2>
+  <div id="feed-container" class="space-y-4"></div>
+
+  <h2 class="text-xl font-semibold mt-8 mb-4">Create Post</h2>
+  <form id="post-form" class="mb-4">
+    <textarea id="postContent" placeholder="What's on your mind?" class="w-full p-2 border mb-2"></textarea>
+    <input type="file" id="postMedia" accept="image/*" class="block mb-2">
+    <button type="submit" class="bg-blue-600 text-white px-4 py-2">Post</button>
+  </form>
+</div>
+
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script> <script type="module"> import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js"; import { getAuth, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-auth.js"; import { getFirestore, doc, setDoc, getDoc, collection, addDoc, query, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-firestore.js";
 
-const CLOUDINARY_URL = 'https://api.cloudinary.com/v1_1/djkz4hbed/upload'; const CLOUDINARY_UPLOAD_PRESET = 'zaybn6xt';
+const CLOUDINARY_URL = 'https://api.cloudinary.com/v1_1/djkz4hbed/upload';
+const CLOUDINARY_UPLOAD_PRESET = 'zaybn6xt';
 
-const firebaseConfig = { apiKey: "AIzaSyB2NK-z6i74kTExGUE_ilN1jM8_oqEeSRs", authDomain: "sylvaria-universe.firebaseapp.com", projectId: "sylvaria-universe", storageBucket: "sylvaria-universe.firebasestorage.app", messagingSenderId: "256537971475", appId: "1:256537971475:web:baaac36786b918338428e6", measurementId: "G-4MCYL3VM15", databaseURL: "https://sylvaria-universe-default-rtdb.firebaseio.com" };
+const firebaseConfig = {
+  apiKey: "AIzaSyB2NK-z6i74kTExGUE_ilN1jM8_oqEeSRs",
+  authDomain: "sylvaria-universe.firebaseapp.com",
+  projectId: "sylvaria-universe",
+  storageBucket: "sylvaria-universe.firebasestorage.app",
+  messagingSenderId: "256537971475",
+  appId: "1:256537971475:web:baaac36786b918338428e6",
+  measurementId: "G-4MCYL3VM15",
+  databaseURL: "https://sylvaria-universe-default-rtdb.firebaseio.com"
+};
 
-const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-// Sign Up signupForm.addEventListener("submit", async (e) => { e.preventDefault(); const email = signupEmail.value; const password = signupPassword.value; const displayName = signupDisplayName.value; try { const userCred = await createUserWithEmailAndPassword(auth, email, password); await setDoc(doc(db, "users", userCred.user.uid), { displayName, profilePic: "" }); } catch (err) { signupError.textContent = err.message; } });
+// Sign Up
+signupForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const email = signupEmail.value;
+  const password = signupPassword.value;
+  const displayName = signupDisplayName.value;
+  try {
+    const userCred = await createUserWithEmailAndPassword(auth, email, password);
+    await setDoc(doc(db, "users", userCred.user.uid), {
+      displayName,
+      profilePic: ""
+    });
+  } catch (err) {
+    signupError.textContent = err.message;
+  }
+});
 
-// Google Sign-In const provider = new GoogleAuthProvider(); googleSigninButton.addEventListener("click", async () => { try { const result = await signInWithPopup(auth, provider); const user = result.user; const userDoc = await getDoc(doc(db, "users", user.uid)); if (!userDoc.exists()) { await setDoc(doc(db, "users", user.uid), { displayName: user.displayName, profilePic: user.photoURL || "" }); } } catch (err) { console.error(err); } });
+// Google Sign-In
+const provider = new GoogleAuthProvider();
+googleSigninButton.addEventListener("click", async () => {
+  try {
+    const result = await signInWithPopup(auth, provider);
+    const user = result.user;
+    const userDoc = await getDoc(doc(db, "users", user.uid));
+    if (!userDoc.exists()) {
+      await setDoc(doc(db, "users", user.uid), {
+        displayName: user.displayName,
+        profilePic: user.photoURL || ""
+      });
+    }
+  } catch (err) {
+    console.error(err);
+  }
+});
 
-// CropperJS + Upload let cropper; profilePicInput.addEventListener("change", (e) => { const file = e.target.files[0]; const reader = new FileReader(); reader.onload = () => { cropperPreview.src = reader.result; cropper = new Cropper(cropperPreview, { aspectRatio: 1, viewMode: 1 }); }; reader.readAsDataURL(file); });
+// CropperJS + Upload
+let cropper;
+profilePicInput.addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  const reader = new FileReader();
+  reader.onload = () => {
+    cropperPreview.src = reader.result;
+    cropper = new Cropper(cropperPreview, {
+      aspectRatio: 1,
+      viewMode: 1
+    });
+  };
+  reader.readAsDataURL(file);
+});
 
-uploadCropped.addEventListener("click", async () => { const canvas = cropper.getCroppedCanvas(); const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/jpeg")); const formData = new FormData(); formData.append("file", blob); formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+uploadCropped.addEventListener("click", async () => {
+  const canvas = cropper.getCroppedCanvas();
+  const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/jpeg"));
+  const formData = new FormData();
+  formData.append("file", blob);
+  formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
 
-const res = await fetch(CLOUDINARY_URL, { method: "POST", body: formData }); const data = await res.json(); const imageUrl = data.secure_url;
+  const res = await fetch(CLOUDINARY_URL, {
+    method: "POST",
+    body: formData
+  });
+  const data = await res.json();
+  const imageUrl = data.secure_url;
 
-const user = auth.currentUser; if (user) { await setDoc(doc(db, "users", user.uid), { displayName: user.displayName || "", profilePic: imageUrl }); alert("Profile picture updated!"); loadUserProfile(); } });
+  const user = auth.currentUser;
+  if (user) {
+    await setDoc(doc(db, "users", user.uid), {
+      displayName: user.displayName || "",
+      profilePic: imageUrl
+    });
+    alert("Profile picture updated!");
+    loadUserProfile();
+  }
+});
 
-// Load Profile Info async function loadUserProfile() { const user = auth.currentUser; if (user) { const userDoc = await getDoc(doc(db, "users", user.uid)); if (userDoc.exists()) { const data = userDoc.data(); profileName.textContent = data.displayName || ""; profileEmail.textContent = user.email; profilePic.src = data.profilePic || "https://via.placeholder.com/150"; } } }
+// Load Profile Info
+async function loadUserProfile() {
+  const user = auth.currentUser;
+  if (user) {
+    const userDoc = await getDoc(doc(db, "users", user.uid));
+    if (userDoc.exists()) {
+      const data = userDoc.data();
+      profileName.textContent = data.displayName || "";
+      profileEmail.textContent = user.email;
+      profilePic.src = data.profilePic || "https://via.placeholder.com/150";
+    }
+  }
+}
 
-onAuthStateChanged(auth, async (user) => { if (user) { await loadUserProfile(); await loadFeed(); } });
+// Load Feed
+async function loadFeed() {
+  const feedContainer = document.getElementById("feed-container");
+  feedContainer.innerHTML = "";
+  const q = query(collection(db, "posts"), orderBy("timestamp", "desc"));
+  const querySnapshot = await getDocs(q);
+  querySnapshot.forEach(async (docSnap) => {
+    const post = docSnap.data();
+    const userDoc = await getDoc(doc(db, "users", post.uid));
+    const userData = userDoc.exists() ? userDoc.data() : {};
 
-// Create Post postForm.addEventListener("submit", async (e) => { e.preventDefault(); const content = postContent.value; const mediaFile = postMedia.files[0]; let mediaUrl = "";
+    const postEl = document.createElement("div");
+    postEl.className = "p-4 border rounded";
+    postEl.innerHTML = `
+      <div class="flex items-center space-x-2 mb-2">
+        <img src="${userData.profilePic || 'https://via.placeholder.com/50'}" class="w-10 h-10 rounded-full">
+        <span class="font-bold">${userData.displayName || 'Anonymous'}</span>
+      </div>
+      <p>${post.content}</p>
+      ${post.mediaUrl ? `<img src="${post.mediaUrl}" class="mt-2 max-w-full">` : ""}
+    `;
+    feedContainer.appendChild(postEl);
+  });
+}
 
-if (mediaFile) { const formData = new FormData(); formData.append("file", mediaFile); formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET); const res = await fetch(CLOUDINARY_URL, { method: "POST", body: formData }); const data = await res.json(); mediaUrl = data.secure_url; }
+// Create Post
+postForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const content = postContent.value;
+  const mediaFile = postMedia.files[0];
+  let mediaUrl = "";
 
-const user = auth.currentUser; if (user) { await addDoc(collection(db, "posts"), { uid: user.uid, content, mediaUrl, timestamp: Date.now() }); postContent.value = ""; postMedia.value = ""; await loadFeed(); } });
+  if (mediaFile) {
+    const formData = new FormData();
+    formData.append("file", mediaFile);
+    formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+    const res = await fetch(CLOUDINARY_URL, {
+      method: "POST",
+      body: formData
+    });
+    const data = await res.json();
+    mediaUrl = data.secure_url;
+  }
 
-// Load Feed async function loadFeed() { const feedContainer = document.getElementById("feed-container"); feedContainer.innerHTML = ""; const q = query(collection(db, "posts"), orderBy("timestamp", "desc")); const querySnapshot = await getDocs(q); querySnapshot.forEach(async (docSnap) => { const post = docSnap.data(); const userDoc = await getDoc(doc(db, "users", post.uid)); const userData = userDoc.exists() ? userDoc.data() : {};
+  const user = auth.currentUser;
+  if (user) {
+    await addDoc(collection(db, "posts"), {
+      uid: user.uid,
+      content,
+      mediaUrl,
+      timestamp: Date.now()
+    });
+    postContent.value = "";
+    postMedia.value = "";
+    await loadFeed();
+  }
+});
 
-const postEl = document.createElement("div");
-postEl.className = "p-4 border rounded";
-postEl.innerHTML = `
-  <div class="flex items-center space-x-2 mb-2">
-    <img src="${userData.profilePic || 'https://via.placeholder.com/50'}" class="w-10 h-10 rounded-full">
-    <span class="font-bold">${userData.displayName || 'Anonymous'}</span>
-  </div>
-  <p>${post.content}</p>
-  ${post.mediaUrl ? `<img src="${post.mediaUrl}" class="mt-2 max-w-full">` : ""}
-`;
-feedContainer.appendChild(postEl);
+// Auth State Listener
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    document.getElementById("dashboard").classList.remove("hidden");
+    document.getElementById("features").classList.remove("hidden");
+    await loadUserProfile();
+    await loadFeed();
+  } else {
+    document.getElementById("dashboard").classList.add("hidden");
+    document.getElementById("features").classList.add("hidden");
+  }
+});
 
-}); } </script> </body> </html>
+</script> </body> </html>
 
 
 
