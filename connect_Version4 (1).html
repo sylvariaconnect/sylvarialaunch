@@ -21,13 +21,6 @@
   </form>
 </div>
 
-<!-- Profile Picture Upload -->
-<div id="upload-section" class="mt-6 bg-gray-800 p-6 rounded-lg shadow-lg hidden">
-  <input type="file" id="profilePicInput" accept="image/*" class="block mb-2 text-white">
-  <div><img id="cropper-preview" class="max-w-full rounded"></div>
-  <button id="upload-cropped" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 mt-2 rounded">Upload Cropped Image</button>
-</div>
-
 <!-- Dashboard -->
 <div id="dashboard" class="mt-8 p-6 bg-gray-800 rounded-lg shadow-lg hidden">
   <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -77,7 +70,44 @@
 
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script> <script type="module"> // Firebase and app logic remains unchanged </script> </body> </html>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script> <script type="module"> import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js"; import { getAuth, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-auth.js"; import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyB2NK-z6i74kTExGUE_ilN1jM8_oqEeSRs",
+  authDomain: "sylvaria-universe.firebaseapp.com",
+  projectId: "sylvaria-universe",
+  storageBucket: "sylvaria-universe.appspot.com",
+  messagingSenderId: "256537971475",
+  appId: "1:256537971475:web:baaac36786b918338428e6",
+  measurementId: "G-4MCYL3VM15",
+  databaseURL: "https://sylvaria-universe-default-rtdb.firebaseio.com"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const authSection = document.getElementById("auth-section");
+const dashboard = document.getElementById("dashboard");
+
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    authSection.classList.add("hidden");
+    dashboard.classList.remove("hidden");
+    const userDoc = await getDoc(doc(db, "users", user.uid));
+    if (userDoc.exists()) {
+      const data = userDoc.data();
+      document.getElementById("profile-name").textContent = data.displayName || "User";
+      document.getElementById("profile-email").textContent = user.email;
+      document.getElementById("profile-pic").src = data.profilePic || "https://via.placeholder.com/150";
+    }
+  } else {
+    authSection.classList.remove("hidden");
+    dashboard.classList.add("hidden");
+  }
+});
+
+</script> </body> </html>
 
 
 
