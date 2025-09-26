@@ -1,49 +1,166 @@
 <!DOCTYPE html> <html lang="en"> <head> <meta charset="UTF-8"> <meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>Sylvaria Connect</title> <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"> <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"> <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet"> </head> <body class="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white min-h-screen"> <div class="container mx-auto p-4"> <h1 class="text-4xl font-extrabold mb-6 text-center bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 bg-clip-text text-transparent">Sylvaria Connect</h1>
 
-<!-- Auth Section --> <div id="auth-section" class="bg-gray-800 p-6 rounded-lg shadow-lg"> <h2 class="text-2xl font-bold mb-4">Sign In</h2> <button id="google-signin-button" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded w-full mb-4 flex items-center justify-center"> <i class="fab fa-google mr-2"></i> Continue with Google </button> <div class="flex items-center my-4"> <hr class="flex-grow border-gray-600"> <span class="px-2 text-gray-400">or</span> <hr class="flex-grow border-gray-600"> </div> <form id="login-form"> <input type="email" id="loginEmail" placeholder="Email" class="block mb-2 p-2 w-full rounded bg-gray-700 text-white"> <input type="password" id="loginPassword" placeholder="Password" class="block mb-2 p-2 w-full rounded bg-gray-700 text-white"> <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded w-full">Sign In</button> <button type="button" id="create-account" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded w-full mt-2">Create Account</button> <p id="loginError" class="text-red-400 mt-2"></p> </form> </div>
-
-<!-- Dashboard --> <div id="dashboard" class="mt-8 p-6 bg-gray-800 rounded-lg shadow-lg hidden"> <div class="grid grid-cols-1 md:grid-cols-3 gap-6"> <!-- Profile Section --> <div class="bg-gray-900 p-4 rounded-lg shadow"> <input type="file" id="profileUpload" accept="image/*" class="mb-2 text-white"> <img id="profile-pic" src="" alt="Profile Picture" class="w-24 h-24 rounded-full object-cover border-4 border-purple-500 mb-4"> <input type="text" id="profile-name" class="text-xl font-bold bg-gray-700 text-white p-2 rounded w-full mb-2" placeholder="Display Name"> <p id="profile-email" class="text-sm text-gray-400">Email</p> <p class="text-sm text-gray-400 mt-2">Affiliation: Department of Energy</p> <div class="mt-4 text-sm text-gray-300"> <p>Posts: <span id="post-count">1</span></p> <p>Friends: <span id="friend-count">0</span></p> </div> <button id="save-profile" class="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded w-full">Save Profile</button> </div>
-
-<!-- Online Users -->
-<div class="bg-gray-900 p-4 rounded-lg shadow">
-  <h3 class="text-lg font-semibold mb-2">Online Users</h3>
-  <ul class="text-sm text-gray-300 space-y-1">
-    <li>Sylvaria GOV</li>
-    <li>Department of Energy</li>
-  </ul>
-</div>
-
-<!-- Create Post -->
-<div class="bg-gray-900 p-4 rounded-lg shadow">
-  <h3 class="text-lg font-semibold mb-2">Create a Post</h3>
-  <form id="post-form">
-    <textarea id="postContent" placeholder="What's on your mind?" class="w-full p-2 rounded bg-gray-700 text-white mb-2"></textarea>
-    <input type="file" id="postMedia" accept="image/*" class="block mb-2 text-white">
-    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded w-full">Post</button>
+<!-- Auth Section -->
+<div id="auth-section" class="bg-gray-800 p-6 rounded-lg shadow-lg">
+  <h2 class="text-2xl font-bold mb-4">Sign In</h2>
+  <button id="google-signin-button" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded w-full mb-4 flex items-center justify-center">
+    <i class="fab fa-google mr-2"></i> Continue with Google
+  </button>
+  <div class="flex items-center my-4">
+    <hr class="flex-grow border-gray-600">
+    <span class="px-2 text-gray-400">or</span>
+    <hr class="flex-grow border-gray-600">
+  </div>
+  <form id="login-form">
+    <input type="email" id="loginEmail" placeholder="Email" class="block mb-2 p-2 w-full rounded bg-gray-700 text-white">
+    <input type="password" id="loginPassword" placeholder="Password" class="block mb-2 p-2 w-full rounded bg-gray-700 text-white">
+    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded w-full">Sign In</button>
+    <button type="button" id="create-account" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded w-full mt-2">Create Account</button>
+    <p id="loginError" class="text-red-400 mt-2"></p>
   </form>
 </div>
 
+<!-- Dashboard -->
+<div id="dashboard" class="mt-8 p-6 bg-gray-800 rounded-lg shadow-lg hidden">
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <!-- Profile Section -->
+    <div class="bg-gray-900 p-4 rounded-lg shadow">
+      <input type="file" id="profileUpload" accept="image/*" class="mb-2 text-white">
+      <img id="profile-pic" src="" alt="Profile Picture" class="w-24 h-24 rounded-full object-cover border-4 border-purple-500 mb-4">
+      <input type="text" id="profile-name" class="text-xl font-bold bg-gray-700 text-white p-2 rounded w-full mb-2" placeholder="Display Name">
+      <p id="profile-email" class="text-sm text-gray-400">Email</p>
+      <p class="text-sm text-gray-400 mt-2">Affiliation: Department of Energy</p>
+      <div class="mt-4 text-sm text-gray-300">
+        <p>Posts: <span id="post-count">1</span></p>
+        <p>Friends: <span id="friend-count">0</span></p>
+      </div>
+      <button id="save-profile" class="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded w-full">Save Profile</button>
+    </div>
+
+    <!-- Online Users -->
+    <div class="bg-gray-900 p-4 rounded-lg shadow">
+      <h3 class="text-lg font-semibold mb-2">Online Users</h3>
+      <ul class="text-sm text-gray-300 space-y-1">
+        <li>Sylvaria GOV</li>
+        <li>Department of Energy</li>
+      </ul>
+    </div>
+
+    <!-- Create Post -->
+    <div class="bg-gray-900 p-4 rounded-lg shadow">
+      <h3 class="text-lg font-semibold mb-2">Create a Post</h3>
+      <form id="post-form">
+        <textarea id="postContent" placeholder="What's on your mind?" class="w-full p-2 rounded bg-gray-700 text-white mb-2"></textarea>
+        <input type="file" id="postMedia" accept="image/*" class="block mb-2 text-white">
+        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded w-full">Post</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Feed Section -->
+  <div class="mt-8 bg-gray-900 p-4 rounded-lg shadow">
+    <h3 class="text-lg font-semibold mb-4">News Feed</h3>
+    <div id="feed-container" class="space-y-4">
+      <div class="bg-gray-800 p-4 rounded-lg">
+        <p class="text-sm text-gray-400">Department of Energy - 26/01/2025 07:58:01</p>
+        <p class="mt-2">Friday Update: Happy Friday everyone! Today, we decided to not put solar out, as we already had near full capacity in our power bank. Due to this, we plan to set testing solar out tomorrow. As of now, all citizens will have access to power & backup power. Thank you for continued support of Sylvaria.</p>
+      </div>
+    </div>
+  </div>
 </div>
 
-<!-- Feed Section --> <div class="mt-8 bg-gray-900 p-4 rounded-lg shadow"> <h3 class="text-lg font-semibold mb-4">News Feed</h3> <div id="feed-container" class="space-y-4"> <div class="bg-gray-800 p-4 rounded-lg"> <p class="text-sm text-gray-400">Department of Energy - 26/01/2025 07:58:01</p> <p class="mt-2">Friday Update: Happy Friday everyone! Today, we decided to not put solar out, as we already had near full capacity in our power bank. Due to this, we plan to set testing solar out tomorrow. As of now, all citizens will have access to power & backup power. Thank you for continued support of Sylvaria.</p> </div> </div> </div> </div> </div>
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script> <script type="module"> import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js"; import { getAuth, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-auth.js"; import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-firestore.js";
 
-const firebaseConfig = { apiKey: "AIzaSyB2NK-z6i74kTExGUE_ilN1jM8_oqEeSRs", authDomain: "sylvaria-universe.firebaseapp.com", projectId: "sylvaria-universe", storageBucket: "sylvaria-universe.appspot.com", messagingSenderId: "256537971475", appId: "1:256537971475:web:baaac36786b918338428e6", measurementId: "G-4MCYL3VM15", databaseURL: "https://sylvaria-universe-default-rtdb.firebaseio.com" };
+const firebaseConfig = {
+  apiKey: "AIzaSyB2NK-z6i74kTExGUE_ilN1jM8_oqEeSRs",
+  authDomain: "sylvaria-universe.firebaseapp.com",
+  projectId: "sylvaria-universe",
+  storageBucket: "sylvaria-universe.appspot.com",
+  messagingSenderId: "256537971475",
+  appId: "1:256537971475:web:baaac36786b918338428e6",
+  measurementId: "G-4MCYL3VM15",
+  databaseURL: "https://sylvaria-universe-default-rtdb.firebaseio.com"
+};
 
-const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-const authSection = document.getElementById("auth-section"); const dashboard = document.getElementById("dashboard");
+const authSection = document.getElementById("auth-section");
+const dashboard = document.getElementById("dashboard");
 
-onAuthStateChanged(auth, async (user) => { if (user) { authSection.classList.add("hidden"); dashboard.classList.remove("hidden"); const userDoc = await getDoc(doc(db, "users", user.uid)); if (userDoc.exists()) { const data = userDoc.data(); document.getElementById("profile-name").value = data.displayName || ""; document.getElementById("profile-email").textContent = user.email; document.getElementById("profile-pic").src = data.profilePic || "https://via.placeholder.com/150"; } } else { authSection.classList.remove("hidden"); dashboard.classList.add("hidden"); } });
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    authSection.classList.add("hidden");
+    dashboard.classList.remove("hidden");
+    const userDoc = await getDoc(doc(db, "users", user.uid));
+    if (userDoc.exists()) {
+      const data = userDoc.data();
+      document.getElementById("profile-name").value = data.displayName || "";
+      document.getElementById("profile-email").textContent = user.email;
+      document.getElementById("profile-pic").src = data.profilePic || "https://via.placeholder.com/150";
+    } else {
+      document.getElementById("profile-email").textContent = user.email;
+    }
+  } else {
+    authSection.classList.remove("hidden");
+    dashboard.classList.add("hidden");
+  }
+});
 
-// Email/Password Sign In const loginForm = document.getElementById("login-form"); loginForm.addEventListener("submit", async (e) => { e.preventDefault(); const email = document.getElementById("loginEmail").value; const password = document.getElementById("loginPassword").value; try { await signInWithEmailAndPassword(auth, email, password); } catch (err) { document.getElementById("loginError").textContent = err.message; } });
+// Email/Password Sign In
+const loginForm = document.getElementById("login-form");
+loginForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const email = document.getElementById("loginEmail").value;
+  const password = document.getElementById("loginPassword").value;
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+  } catch (err) {
+    document.getElementById("loginError").textContent = err.message;
+  }
+});
 
-// Google Sign-In const provider = new GoogleAuthProvider(); document.getElementById("google-signin-button").addEventListener("click", async () => { try { await signInWithPopup(auth, provider); } catch (err) { console.error(err); } });
+// Google Sign-In
+const provider = new GoogleAuthProvider();
+document.getElementById("google-signin-button").addEventListener("click", async () => {
+  try {
+    await signInWithPopup(auth, provider);
+  } catch (err) {
+    console.error(err);
+  }
+});
 
-// Save Profile document.getElementById("save-profile").addEventListener("click", async () => { const user = auth.currentUser; if (!user) return; const displayName = document.getElementById("profile-name").value; const profilePic = document.getElementById("profile-pic").src; await setDoc(doc(db, "users", user.uid), { displayName, profilePic }); });
+// Save Profile
+document.getElementById("save-profile").addEventListener("click", async () => {
+  const user = auth.currentUser;
+  if (!user) return;
+  const displayName = document.getElementById("profile-name").value;
+  const profilePic = document.getElementById("profile-pic").src;
+  await setDoc(doc(db, "users", user.uid), {
+    displayName,
+    profilePic
+  });
+});
 
-// Profile Picture Upload document.getElementById("profileUpload").addEventListener("change", async (e) => { const file = e.target.files[0]; if (!file) return; const formData = new FormData(); formData.append("file", file); formData.append("upload_preset", "zaybn6xt"); const res = await fetch("https://api.cloudinary.com/v1_1/djkz4hbed/upload", { method: "POST", body: formData }); const data = await res.json(); document.getElementById("profile-pic").src = data.secure_url; }); </script> </body> </html>
+// Profile Picture Upload
+document.getElementById("profileUpload").addEventListener("change", async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("upload_preset", "zaybn6xt");
+  const res = await fetch("https://api.cloudinary.com/v1_1/djkz4hbed/upload", {
+    method: "POST",
+    body: formData
+  });
+  const data = await res.json();
+  document.getElementById("profile-pic").src = data.secure_url;
+});
+
+</script> </body> </html>
 
 
 
