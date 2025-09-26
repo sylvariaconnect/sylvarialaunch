@@ -2,14 +2,23 @@
 
 <!-- Auth Section -->
 <div id="auth-section" class="bg-gray-800 p-6 rounded-lg shadow-lg">
-  <form id="signup-form" class="mb-4">
+  <h2 class="text-2xl font-bold mb-4">Sign In</h2>
+  <button id="google-signin-button" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded w-full mb-4 flex items-center justify-center">
+    <i class="fab fa-google mr-2"></i> Continue with Google
+  </button>
+  <div class="flex items-center my-4">
+    <hr class="flex-grow border-gray-600">
+    <span class="px-2 text-gray-400">or</span>
+    <hr class="flex-grow border-gray-600">
+  </div>
+  <form id="signup-form">
     <input type="text" id="signupDisplayName" placeholder="Display Name" class="block mb-2 p-2 w-full rounded bg-gray-700 text-white">
     <input type="email" id="signupEmail" placeholder="Email" class="block mb-2 p-2 w-full rounded bg-gray-700 text-white">
     <input type="password" id="signupPassword" placeholder="Password" class="block mb-2 p-2 w-full rounded bg-gray-700 text-white">
-    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">Sign Up</button>
+    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded w-full">Sign In</button>
+    <button type="button" id="create-account" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded w-full mt-2">Create Account</button>
     <p id="signupError" class="text-red-400 mt-2"></p>
   </form>
-  <button id="google-signin-button" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">Sign in with Google</button>
 </div>
 
 <!-- Profile Picture Upload -->
@@ -21,31 +30,49 @@
 
 <!-- Dashboard -->
 <div id="dashboard" class="mt-8 p-6 bg-gray-800 rounded-lg shadow-lg hidden">
-  <h2 class="text-2xl font-bold mb-4">Your Profile</h2>
-  <div class="flex items-center space-x-4">
-    <img id="profile-pic" src="" alt="Profile Picture" class="w-24 h-24 rounded-full object-cover border-4 border-purple-500">
-    <div>
-      <p class="text-xl font-semibold" id="profile-name">Display Name</p>
-      <p class="text-sm text-gray-400" id="profile-email">Email</p>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <!-- Profile Section -->
+    <div class="bg-gray-900 p-4 rounded-lg shadow">
+      <img id="profile-pic" src="" alt="Profile Picture" class="w-24 h-24 rounded-full object-cover border-4 border-purple-500 mb-4">
+      <h3 id="profile-name" class="text-xl font-bold">Sylvaria</h3>
+      <p id="profile-email" class="text-sm text-gray-400">sloth@outlook.com</p>
+      <p class="text-sm text-gray-400 mt-2">Affiliation: Department of Energy</p>
+      <div class="mt-4 text-sm text-gray-300">
+        <p>Posts: <span id="post-count">1</span></p>
+        <p>Friends: <span id="friend-count">0</span></p>
+      </div>
+    </div>
+
+    <!-- Online Users -->
+    <div class="bg-gray-900 p-4 rounded-lg shadow">
+      <h3 class="text-lg font-semibold mb-2">Online Users</h3>
+      <ul class="text-sm text-gray-300 space-y-1">
+        <li>Sylvaria GOV</li>
+        <li>Department of Energy</li>
+      </ul>
+    </div>
+
+    <!-- Create Post -->
+    <div class="bg-gray-900 p-4 rounded-lg shadow">
+      <h3 class="text-lg font-semibold mb-2">Create a Post</h3>
+      <form id="post-form">
+        <textarea id="postContent" placeholder="What's on your mind?" class="w-full p-2 rounded bg-gray-700 text-white mb-2"></textarea>
+        <input type="file" id="postMedia" accept="image/*" class="block mb-2 text-white">
+        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded w-full">Post</button>
+      </form>
     </div>
   </div>
-  <div class="mt-4">
-    <h3 class="text-lg font-semibold">Your Activity</h3>
-    <p class="text-gray-400">Posts, likes, and more coming soon...</p>
+
+  <!-- Feed Section -->
+  <div class="mt-8 bg-gray-900 p-4 rounded-lg shadow">
+    <h3 class="text-lg font-semibold mb-4">News Feed</h3>
+    <div id="feed-container" class="space-y-4">
+      <div class="bg-gray-800 p-4 rounded-lg">
+        <p class="text-sm text-gray-400">Department of Energy - 26/01/2025 07:58:01</p>
+        <p class="mt-2">Friday Update: Happy Friday everyone! Today, we decided to not put solar out, as we already had near full capacity in our power bank. Due to this, we plan to set testing solar out tomorrow. As of now, all citizens will have access to power & backup power. Thank you for continued support of Sylvaria.</p>
+      </div>
+    </div>
   </div>
-</div>
-
-<!-- Facebook-style Features -->
-<div id="features" class="mt-8 p-6 bg-gray-800 rounded-lg shadow-lg hidden">
-  <h2 class="text-2xl font-bold mb-4">News Feed</h2>
-  <div id="feed-container" class="space-y-4"></div>
-
-  <h2 class="text-2xl font-bold mt-8 mb-4">Create Post</h2>
-  <form id="post-form" class="mb-4">
-    <textarea id="postContent" placeholder="What's on your mind?" class="w-full p-2 rounded bg-gray-700 text-white mb-2"></textarea>
-    <input type="file" id="postMedia" accept="image/*" class="block mb-2 text-white">
-    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">Post</button>
-  </form>
 </div>
 
 </div>
