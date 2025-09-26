@@ -8,9 +8,18 @@
 
 <!-- Dashboard --> <div id="dashboard" class="mt-8 p-4 bg-white rounded shadow"> <h2 class="text-xl font-semibold mb-4">Your Profile</h2> <div class="flex items-center space-x-4"> <img id="profile-pic" src="" alt="Profile Picture" class="w-24 h-24 rounded-full object-cover"> <div> <p class="text-lg font-bold" id="profile-name">Display Name</p> <p class="text-sm text-gray-600" id="profile-email">Email</p> </div> </div> <div class="mt-4"> <h3 class="text-md font-semibold">Your Activity</h3> <p class="text-gray-500">Posts, likes, and more coming soon...</p> </div> </div>
 
-</div>
+<!-- Facebook-style Features --> <div id="features" class="mt-8 p-4 bg-white rounded shadow"> <h2 class="text-xl font-semibold mb-4">News Feed</h2> <div id="feed-container" class="space-y-4"></div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script> <script type="module"> import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js"; import { getAuth, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-auth.js"; import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-firestore.js";
+<h2 class="text-xl font-semibold mt-8 mb-4">Create Post</h2>
+<form id="post-form" class="mb-4">
+  <textarea id="postContent" placeholder="What's on your mind?" class="w-full p-2 border mb-2"></textarea>
+  <input type="file" id="postMedia" accept="image/*" class="block mb-2">
+  <button type="submit" class="bg-blue-600 text-white px-4 py-2">Post</button>
+</form>
+
+</div> </div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script> <script type="module"> import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js"; import { getAuth, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-auth.js"; import { getFirestore, doc, setDoc, getDoc, collection, addDoc, query, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-firestore.js";
 
 const CLOUDINARY_URL = 'https://api.cloudinary.com/v1_1/djkz4hbed/upload'; const CLOUDINARY_UPLOAD_PRESET = 'zaybn6xt';
 
@@ -30,7 +39,31 @@ const res = await fetch(CLOUDINARY_URL, { method: "POST", body: formData }); con
 
 const user = auth.currentUser; if (user) { await setDoc(doc(db, "users", user.uid), { displayName: user.displayName || "", profilePic: imageUrl }); alert("Profile picture updated!"); loadUserProfile(); } });
 
-// Load Profile Info onAuthStateChanged(auth, async (user) => { if (user) { const userDoc = await getDoc(doc(db, "users", user.uid)); if (userDoc.exists()) { const data = userDoc.data(); profileName.textContent = data.displayName || ""; profileEmail.textContent = user.email; profilePic.src = data.profilePic || "https://via.placeholder.com/150"; } } }); </script> </body> </html>
+// Load Profile Info async function loadUserProfile() { const user = auth.currentUser; if (user) { const userDoc = await getDoc(doc(db, "users", user.uid)); if (userDoc.exists()) { const data = userDoc.data(); profileName.textContent = data.displayName || ""; profileEmail.textContent = user.email; profilePic.src = data.profilePic || "https://via.placeholder.com/150"; } } }
+
+onAuthStateChanged(auth, async (user) => { if (user) { await loadUserProfile(); await loadFeed(); } });
+
+// Create Post postForm.addEventListener("submit", async (e) => { e.preventDefault(); const content = postContent.value; const mediaFile = postMedia.files[0]; let mediaUrl = "";
+
+if (mediaFile) { const formData = new FormData(); formData.append("file", mediaFile); formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET); const res = await fetch(CLOUDINARY_URL, { method: "POST", body: formData }); const data = await res.json(); mediaUrl = data.secure_url; }
+
+const user = auth.currentUser; if (user) { await addDoc(collection(db, "posts"), { uid: user.uid, content, mediaUrl, timestamp: Date.now() }); postContent.value = ""; postMedia.value = ""; await loadFeed(); } });
+
+// Load Feed async function loadFeed() { const feedContainer = document.getElementById("feed-container"); feedContainer.innerHTML = ""; const q = query(collection(db, "posts"), orderBy("timestamp", "desc")); const querySnapshot = await getDocs(q); querySnapshot.forEach(async (docSnap) => { const post = docSnap.data(); const userDoc = await getDoc(doc(db, "users", post.uid)); const userData = userDoc.exists() ? userDoc.data() : {};
+
+const postEl = document.createElement("div");
+postEl.className = "p-4 border rounded";
+postEl.innerHTML = `
+  <div class="flex items-center space-x-2 mb-2">
+    <img src="${userData.profilePic || 'https://via.placeholder.com/50'}" class="w-10 h-10 rounded-full">
+    <span class="font-bold">${userData.displayName || 'Anonymous'}</span>
+  </div>
+  <p>${post.content}</p>
+  ${post.mediaUrl ? `<img src="${post.mediaUrl}" class="mt-2 max-w-full">` : ""}
+`;
+feedContainer.appendChild(postEl);
+
+}); } </script> </body> </html>
 
 
 
